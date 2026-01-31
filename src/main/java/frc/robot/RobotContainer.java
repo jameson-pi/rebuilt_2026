@@ -14,9 +14,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Degrees;
 import static frc.robot.subsystems.vision.VisionConstants.*;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,8 +27,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ShooterCalibrationCommand;
+import frc.robot.commands.ShootingCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.*;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -47,12 +50,14 @@ public class RobotContainer {
     // Subsystems
     private final Drive drive;
     private final Vision vision;
+    private final Shooter shooter;
+    private final Hood hood;
+    private GamePieceTrajectorySimulation gamePieceTrajectorySimulation = null;
 
     private SwerveDriveSimulation driveSimulation = null;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
-
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -72,13 +77,22 @@ public class RobotContainer {
                         drive,
                         new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
                         new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
+                var shooterIO = new ShooterIOKrakenX60();
+                this.shooter = new Shooter(shooterIO);
+                shooterIO.setShooter(shooter);
+
+                var hoodIO = new frc.robot.subsystems.hood.HoodIOKrakenX60();
+                this.hood = new frc.robot.subsystems.hood.Hood(hoodIO);
+                hoodIO.setHood(hood);
 
                 break;
             case SIM:
-                // Sim robot, instantiate physics sim IO implementations
 
-                driveSimulation = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+                // Sim robot, instantiate physics sim IO implementations
+                driveSimulation =
+                        new SwerveDriveSimulation(Drive.createMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
                 SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
+
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
                         new ModuleIOTalonFXSim(
@@ -96,6 +110,13 @@ public class RobotContainer {
                                 camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                         new VisionIOPhotonVisionSim(
                                 camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                shooter = new Shooter(new ShooterIOSim());
+                hood = new Hood(new HoodIOSim());
+
+                gamePieceTrajectorySimulation = new GamePieceTrajectorySimulation(
+                        driveSimulation,
+                        () -> (shooter.getLeftFlywheelVelocity() + shooter.getRightFlywheelVelocity()) / 2.0,
+                        () -> hood.getAngle());
 
                 break;
 
@@ -109,6 +130,8 @@ public class RobotContainer {
                         new ModuleIO() {},
                         (pose) -> {});
                 vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+                shooter = new Shooter(new ShooterIO() {});
+                hood = new frc.robot.subsystems.hood.Hood(new frc.robot.subsystems.hood.HoodIO() {});
 
                 break;
         }
@@ -125,6 +148,14 @@ public class RobotContainer {
                 "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        // Add shooter calibration mode (simulation only)
+        if (Constants.currentMode == Constants.Mode.SIM && gamePieceTrajectorySimulation != null) {
+            autoChooser.addOption(
+                    "Shooter Calibration",
+                    new ShooterCalibrationCommand(
+                            hood, shooter, gamePieceTrajectorySimulation, driveSimulation, drive::setPose));
+        }
 
         // Configure the button bindings
         configureButtonBindings();
@@ -157,6 +188,31 @@ public class RobotContainer {
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
+        // Left trigger: Full auto-aim - aims at hub, sets hood angle, AND spins up flywheels
+        controller
+                .leftTrigger()
+                .whileTrue(ShootingCommands.fullAutoAim(
+                        drive, hood, shooter, () -> -controller.getLeftY(), () -> -controller.getLeftX()))
+                .onFalse(shooter.stopCommand());
+
+        // POV Up: Launch FUEL in simulation
+        if (Constants.currentMode == Constants.Mode.SIM && gamePieceTrajectorySimulation != null) {
+            controller
+                    .rightTrigger()
+                    .onTrue(Commands.startEnd(
+                            () -> gamePieceTrajectorySimulation.setIndexerRunningSupplier(
+                                    () -> gamePieceTrajectorySimulation.shouldIndexerRun()),
+                            () -> gamePieceTrajectorySimulation.setIndexerRunningSupplier(() -> false)));
+            controller.povUp().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
+                    .addGamePieceProjectile(gamePieceTrajectorySimulation.launchGamePiece())));
+            controller.povDown().onTrue(Commands.runOnce(() -> gamePieceTrajectorySimulation.addBalls(10)));
+            controller
+                    .povLeft()
+                    .onFalse(Commands.runOnce(() -> gamePieceTrajectorySimulation.setAutoFireEnabled(false)));
+            controller
+                    .povRight()
+                    .onTrue(Commands.runOnce(() -> gamePieceTrajectorySimulation.setAutoFireEnabled(false)));
+        }
         // Example Coral Placement Code
         // TODO: delete these code for your own project
         if (Constants.currentMode == Constants.Mode.SIM) {
@@ -208,5 +264,7 @@ public class RobotContainer {
                 "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
         Logger.recordOutput(
                 "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+        gamePieceTrajectorySimulation.updateAutoFire();
+        Logger.recordOutput("FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
     }
 }
