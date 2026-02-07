@@ -20,8 +20,8 @@ public class LeftShooterConstants {
 
     // Feature flags
     public static final boolean enabled = true;
-    public static final boolean followerEnabled = true;
-    public static final boolean spinMotorEnabled = true;
+    public static final boolean followerEnabled = false;
+    public static final boolean spinMotorEnabled = false;
 
     // Motor inversion (left side is counter-clockwise positive)
     public static final InvertedValue flywheelInverted = InvertedValue.CounterClockwise_Positive;
@@ -34,7 +34,7 @@ public class LeftShooterConstants {
     public static final Time spinClosedLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
 
     // Flywheel PID
-    public static final double flywheelKP = 0.1;
+    public static final double flywheelKP = 0.6;
     public static final double flywheelKI = 0.0;
     public static final double flywheelKD = 0.0;
     public static final double flywheelKV = 0.0;
@@ -60,5 +60,5 @@ public class LeftShooterConstants {
     public static final boolean spinCurrentLimitSupplyEnable = true;
 
     // Spin ratio (spin motor velocity as fraction of main flywheel velocity)
-    public static final double defaultSpinRatio = 0.5;
+    public static final double defaultSpinRatio = 0;
 }

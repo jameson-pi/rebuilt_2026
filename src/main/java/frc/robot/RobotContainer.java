@@ -27,6 +27,7 @@ import frc.robot.subsystems.shooter.left.LeftShooterIOSim;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -47,6 +48,8 @@ public class RobotContainer {
     private final LeftShooter leftShooter;
 
     private SwerveDriveSimulation driveSimulation = null;
+
+    private final LoggedNetworkNumber testRpm = new LoggedNetworkNumber("Test/ShooterRPM", -3700.0);
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -209,9 +212,9 @@ public class RobotContainer {
         */
 
         // Simple manual shooter control for testing
-        controller.rightTrigger().whileTrue(leftShooter.spinUpFlywheels(RPM.of(-3650.0)));
+        // controller.rightTrigger().whileTrue(leftShooter.spinUpFlywheels(RPM.of(-3650.0)));
+        controller.rightTrigger().whileTrue(leftShooter.spinUpFlywheels(() -> RPM.of(testRpm.get())));
         controller.leftTrigger().onTrue(leftShooter.stopCommand());
-        
     }
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
