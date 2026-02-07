@@ -182,12 +182,16 @@ public class RobotContainer {
                 .whileTrue(DriveCommands.joystickDriveAtAngle(
                         drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
 
-        // Spin up shooter using OI mapping
-        oi.spinUpShooter()
-                .whileTrue(superstructure.spinUpShooterCommand(
-                        drive, () -> -oi.driveTranslationY().getAsDouble(), () -> -oi.driveTranslationX()
-                                .getAsDouble()))
-                .onFalse(superstructure.stopShooterCommand());
+        // Spin up shooter using OI mapping (also previews trajectory in sim)
+        Command spinUpCommand = superstructure.spinUpShooterCommand(
+                drive, () -> -oi.driveTranslationY().getAsDouble(), () -> -oi.driveTranslationX()
+                        .getAsDouble());
+        if (Constants.currentMode == Constants.Mode.SIM && superstructure.hasGamePieceTrajectorySimulation()) {
+            spinUpCommand = spinUpCommand.alongWith(Commands.run(() ->
+                            superstructure.getGamePieceTrajectorySimulation().previewTrajectory())
+                    .withName("PreviewTrajectory"));
+        }
+        oi.spinUpShooter().whileTrue(spinUpCommand).onFalse(superstructure.stopShooterCommand());
 
         // Fire shooter using OI mapping (only feeds when at speed)
         oi.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
@@ -207,8 +211,8 @@ public class RobotContainer {
         // Simple manual shooter control for testing
         controller.rightTrigger().whileTrue(leftShooter.spinUpFlywheels(RPM.of(-3650.0)));
         controller.leftTrigger().onTrue(leftShooter.stopCommand());
+        
     }
-
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *

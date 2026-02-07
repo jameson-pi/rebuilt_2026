@@ -38,7 +38,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class GamePieceTrajectorySimulation {
     // Physics constants
-    private static final double GRAVITY = 11.0; // Maple-sim adjusted gravity (m/s²)
+    private static final double GRAVITY = 9.81; // Standard gravity (m/s²)
     private static final int DEFAULT_TRAJECTORY_POINTS = 30; // Reduced from 100 for efficiency
     private static final double MAX_TRAJECTORY_TIME = 3.0; // Maximum trajectory time (seconds)
     /**
