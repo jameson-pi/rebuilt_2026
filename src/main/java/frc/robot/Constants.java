@@ -34,11 +34,7 @@ public final class Constants {
     public class CANIDs {
         public class MotorIDs {
             // TODO: Update IDs
-            public static final int kCollectorBeltID = 12;
-            public static final int kFeederBeltID = 13;
+            public static final int kIndexerMotorID = 14;
         }
-
-        public static final int kCollectorBelt = 12;
-        public static final int kFeederBelt = 13;
     }
 }

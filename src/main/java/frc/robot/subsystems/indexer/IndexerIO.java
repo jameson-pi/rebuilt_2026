@@ -1,11 +1,15 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.Volts;
+
+import edu.wpi.first.units.measure.Voltage;
+import org.littletonrobotics.junction.AutoLog;
+
 public interface IndexerIO {
-    public static class IndexerIOInputs {
-        // Add any sensor inputs or state variables here if needed
-        public void updateInputs(IndexerIOInputs indexerInputs) {
-            // Update input values from sensors or other sources here
-        }
+
+    @AutoLog
+    class IndexerIOInputs {
+        public Voltage motorOutput = Volts.of(0);
     }
 
     default void index() {}
@@ -16,5 +20,7 @@ public interface IndexerIO {
 
     default void setCustomSpeed(double speed) {}
 
-    void updateInputs(IndexerIOInputs indexerInputs);
+    default void runAtSpeed() {}
+
+    default void updateInputs(IndexerIOInputs indexerInputs) {}
 }
