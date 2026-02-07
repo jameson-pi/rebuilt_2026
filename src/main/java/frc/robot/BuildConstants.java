@@ -1,20 +1,19 @@
 package frc.robot;
 
-/** Automatically generated file containing build version information. */
+/**
+ * Automatically generated file containing build version information.
+ */
 public final class BuildConstants {
-    public static final String MAVEN_GROUP = "";
-    public static final String MAVEN_NAME = "rebuilt_2026-1";
-    public static final String VERSION = "unspecified";
-    public static final int GIT_REVISION = 32;
-    public static final String GIT_SHA = "ab9e08ee6f67ec63995a067004b577c1dc6c4cd0";
-    public static final String GIT_DATE = "2026-02-07 13:11:43 EST";
-    public static final int GIT_REVISION = 30;
-    public static final String GIT_SHA = "6be8b5c916cd3278219e2daa770d488091e94a94";
-    public static final String GIT_DATE = "2026-02-07 11:51:03 EST";
-    public static final String GIT_BRANCH = "shooterTesting";
-    public static final String BUILD_DATE = "2026-02-07 15:56:24 EST";
-    public static final long BUILD_UNIX_TIME = 1770497784318L;
-    public static final int DIRTY = 1;
+  public static final String MAVEN_GROUP = "";
+  public static final String MAVEN_NAME = "rebuild_2026";
+  public static final String VERSION = "unspecified";
+  public static final int GIT_REVISION = 31;
+  public static final String GIT_SHA = "ae4766b05f94e4db7c7a91db3b8d17ca13512f6c";
+  public static final String GIT_DATE = "2026-02-07 16:13:37 EST";
+  public static final String GIT_BRANCH = "shooterTesting";
+  public static final String BUILD_DATE = "2026-02-07 16:58:46 EST";
+  public static final long BUILD_UNIX_TIME = 1770501526749L;
+  public static final int DIRTY = 1;
 
-    private BuildConstants() {}
+  private BuildConstants(){}
 }
