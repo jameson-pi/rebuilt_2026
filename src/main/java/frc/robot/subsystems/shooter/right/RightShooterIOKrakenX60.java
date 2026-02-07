@@ -56,27 +56,35 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
                         .withKV(RightShooterConstants.flywheelKV)
                         .withKS(RightShooterConstants.flywheelKS));
 
-        flywheelFollower = new TunableTalonFX(
-                RightShooterConstants.flywheelFollowerId,
-                RightShooterConstants.canBusName,
-                "RightShooter/FlywheelFollower",
-                new Slot0Configs()
-                        .withKP(RightShooterConstants.flywheelKP)
-                        .withKI(RightShooterConstants.flywheelKI)
-                        .withKD(RightShooterConstants.flywheelKD)
-                        .withKV(RightShooterConstants.flywheelKV)
-                        .withKS(RightShooterConstants.flywheelKS));
+        if (RightShooterConstants.followerEnabled) {
+            flywheelFollower = new TunableTalonFX(
+                    RightShooterConstants.flywheelFollowerId,
+                    RightShooterConstants.canBusName,
+                    "RightShooter/FlywheelFollower",
+                    new Slot0Configs()
+                            .withKP(RightShooterConstants.flywheelKP)
+                            .withKI(RightShooterConstants.flywheelKI)
+                            .withKD(RightShooterConstants.flywheelKD)
+                            .withKV(RightShooterConstants.flywheelKV)
+                            .withKS(RightShooterConstants.flywheelKS));
+        } else {
+            flywheelFollower = null;
+        }
 
-        spinMotor = new TunableTalonFX(
-                RightShooterConstants.spinMotorId,
-                RightShooterConstants.canBusName,
-                "RightShooter/Spin",
-                new Slot0Configs()
-                        .withKP(RightShooterConstants.spinKP)
-                        .withKI(RightShooterConstants.spinKI)
-                        .withKD(RightShooterConstants.spinKD)
-                        .withKV(RightShooterConstants.spinKV)
-                        .withKS(RightShooterConstants.spinKS));
+        if (RightShooterConstants.spinMotorEnabled) {
+            spinMotor = new TunableTalonFX(
+                    RightShooterConstants.spinMotorId,
+                    RightShooterConstants.canBusName,
+                    "RightShooter/Spin",
+                    new Slot0Configs()
+                            .withKP(RightShooterConstants.spinKP)
+                            .withKI(RightShooterConstants.spinKI)
+                            .withKD(RightShooterConstants.spinKD)
+                            .withKV(RightShooterConstants.spinKV)
+                            .withKS(RightShooterConstants.spinKS));
+        } else {
+            spinMotor = null;
+        }
 
         // Configure flywheel motor
         var flywheelConfig = new TalonFXConfiguration();
@@ -88,21 +96,24 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
         flywheelConfig.CurrentLimits.SupplyCurrentLimit = RightShooterConstants.flywheelCurrentLimitSupply.in(Amps);
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = RightShooterConstants.flywheelCurrentLimitSupplyEnable;
         tryUntilOk(5, () -> flywheelMotor.applyConfiguration(flywheelConfig, 0.25));
-        tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
+
+        if (flywheelFollower != null) {
+            tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
+            flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        }
 
         // Configure spin motor
-        var spinConfig = new TalonFXConfiguration();
-        spinConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        spinConfig.MotorOutput.Inverted = spinInverted;
-        spinConfig.Slot0 = spinMotor.getTunableSlot0Configs();
-        spinConfig.CurrentLimits.StatorCurrentLimit = RightShooterConstants.spinCurrentLimitStator.in(Amps);
-        spinConfig.CurrentLimits.StatorCurrentLimitEnable = RightShooterConstants.spinCurrentLimitStatorEnable;
-        spinConfig.CurrentLimits.SupplyCurrentLimit = RightShooterConstants.spinCurrentLimitSupply.in(Amps);
-        spinConfig.CurrentLimits.SupplyCurrentLimitEnable = RightShooterConstants.spinCurrentLimitSupplyEnable;
-        tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
-
-        // Set follower
-        flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        if (spinMotor != null) {
+            var spinConfig = new TalonFXConfiguration();
+            spinConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+            spinConfig.MotorOutput.Inverted = spinInverted;
+            spinConfig.Slot0 = spinMotor.getTunableSlot0Configs();
+            spinConfig.CurrentLimits.StatorCurrentLimit = RightShooterConstants.spinCurrentLimitStator.in(Amps);
+            spinConfig.CurrentLimits.StatorCurrentLimitEnable = RightShooterConstants.spinCurrentLimitStatorEnable;
+            spinConfig.CurrentLimits.SupplyCurrentLimit = RightShooterConstants.spinCurrentLimitSupply.in(Amps);
+            spinConfig.CurrentLimits.SupplyCurrentLimitEnable = RightShooterConstants.spinCurrentLimitSupplyEnable;
+            tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
+        }
 
         // Get status signals
         flywheelVelocity = flywheelMotor.getVelocity();
@@ -110,66 +121,102 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
         flywheelCurrent = flywheelMotor.getStatorCurrent();
         flywheelTemp = flywheelMotor.getDeviceTemp();
 
-        spinVelocity = spinMotor.getVelocity();
-        spinAppliedVolts = spinMotor.getMotorVoltage();
-        spinCurrent = spinMotor.getStatorCurrent();
-        spinTemp = spinMotor.getDeviceTemp();
+        if (spinMotor != null) {
+            spinVelocity = spinMotor.getVelocity();
+            spinAppliedVolts = spinMotor.getMotorVoltage();
+            spinCurrent = spinMotor.getStatorCurrent();
+            spinTemp = spinMotor.getDeviceTemp();
+        } else {
+            spinVelocity = null;
+            spinAppliedVolts = null;
+            spinCurrent = null;
+            spinTemp = null;
+        }
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0,
-                flywheelVelocity,
-                flywheelAppliedVolts,
-                flywheelCurrent,
-                flywheelTemp,
-                spinVelocity,
-                spinAppliedVolts,
-                spinCurrent,
-                spinTemp);
+        var signals = new java.util.ArrayList<BaseStatusSignal>();
+        signals.add(flywheelVelocity);
+        signals.add(flywheelAppliedVolts);
+        signals.add(flywheelCurrent);
+        signals.add(flywheelTemp);
+        if (spinMotor != null) {
+            signals.add(spinVelocity);
+            signals.add(spinAppliedVolts);
+            signals.add(spinCurrent);
+            signals.add(spinTemp);
+        }
 
-        ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower, spinMotor);
+        BaseStatusSignal.setUpdateFrequencyForAll(50.0, signals.toArray(new BaseStatusSignal[0]));
+
+        if (flywheelFollower != null && spinMotor != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower, spinMotor);
+        } else if (flywheelFollower != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower);
+        } else if (spinMotor != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, spinMotor);
+        } else {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor);
+        }
     }
 
     @Override
     public void updateInputs(RightShooterIOInputs inputs) {
         flywheelMotor.updateTunableGains();
-        spinMotor.updateTunableGains();
+        if (spinMotor != null) {
+            spinMotor.updateTunableGains();
+        }
 
-        BaseStatusSignal.refreshAll(
-                flywheelVelocity,
-                flywheelAppliedVolts,
-                flywheelCurrent,
-                flywheelTemp,
-                spinVelocity,
-                spinAppliedVolts,
-                spinCurrent,
-                spinTemp);
+        var signals = new java.util.ArrayList<BaseStatusSignal>();
+        signals.add(flywheelVelocity);
+        signals.add(flywheelAppliedVolts);
+        signals.add(flywheelCurrent);
+        signals.add(flywheelTemp);
+        if (spinMotor != null) {
+            signals.add(spinVelocity);
+            signals.add(spinAppliedVolts);
+            signals.add(spinCurrent);
+            signals.add(spinTemp);
+        }
+
+        BaseStatusSignal.refreshAll(signals.toArray(new BaseStatusSignal[0]));
 
         inputs.flywheelVelocity = flywheelVelocity.getValue();
         inputs.flywheelAppliedVoltage = flywheelAppliedVolts.getValue();
         inputs.flywheelCurrent = flywheelCurrent.getValue();
         inputs.flywheelTemp = flywheelTemp.getValue();
-        inputs.spinVelocity = spinVelocity.getValue();
-        inputs.spinAppliedVoltage = spinAppliedVolts.getValue();
-        inputs.spinCurrent = spinCurrent.getValue();
-        inputs.spinTemp = spinTemp.getValue();
+
+        if (spinMotor != null) {
+            inputs.spinVelocity = spinVelocity.getValue();
+            inputs.spinAppliedVoltage = spinAppliedVolts.getValue();
+            inputs.spinCurrent = spinCurrent.getValue();
+            inputs.spinTemp = spinTemp.getValue();
+        } else {
+            inputs.spinVelocity = RPM.of(0.0);
+            inputs.spinAppliedVoltage = Volts.of(0.0);
+            inputs.spinCurrent = Amps.of(0.0);
+            inputs.spinTemp = Celsius.of(0.0);
+        }
     }
 
     @Override
     public void setFlywheelVelocity(AngularVelocity velocity) {
-        double rotationsPerSecond = velocity.in(RotationsPerSecond);
-        flywheelMotor.setControl(velocityRequest.withVelocity(rotationsPerSecond));
+        flywheelMotor.setControl(velocityRequest.withVelocity(velocity.in(RotationsPerSecond)));
     }
 
     @Override
     public void setSpinVelocity(AngularVelocity velocity) {
-        double rotationsPerSecond = velocity.in(RotationsPerSecond);
-        spinMotor.setControl(spinVelocityRequest.withVelocity(rotationsPerSecond));
+        if (spinMotor != null) {
+            spinMotor.setControl(spinVelocityRequest.withVelocity(velocity.in(RotationsPerSecond)));
+        }
     }
 
     @Override
     public void stop() {
         flywheelMotor.stopMotor();
-        flywheelFollower.stopMotor();
-        spinMotor.stopMotor();
+        if (flywheelFollower != null) {
+            flywheelFollower.stopMotor();
+        }
+        if (spinMotor != null) {
+            spinMotor.stopMotor();
+        }
     }
 }

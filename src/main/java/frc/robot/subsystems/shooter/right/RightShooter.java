@@ -38,6 +38,8 @@ public class RightShooter extends SubsystemBase {
         Logger.processInputs("RightShooter", inputs);
 
         Logger.recordOutput("RightShooter/Enabled", RightShooterConstants.enabled);
+        Logger.recordOutput("RightShooter/FollowerEnabled", RightShooterConstants.followerEnabled);
+        Logger.recordOutput("RightShooter/SpinMotorEnabled", RightShooterConstants.spinMotorEnabled);
         Logger.recordOutput("RightShooter/FlywheelSetpoint", flywheelSetpoint);
         Logger.recordOutput("RightShooter/SpinSetpoint", spinSetpoint);
         Logger.recordOutput("RightShooter/SpinRatio", spinRatio.get());

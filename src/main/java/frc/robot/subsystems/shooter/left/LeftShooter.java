@@ -36,12 +36,19 @@ public class LeftShooter extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("LeftShooter", inputs);
-
         Logger.recordOutput("LeftShooter/Enabled", LeftShooterConstants.enabled);
+        Logger.recordOutput("LeftShooter/FollowerEnabled", LeftShooterConstants.followerEnabled);
+        Logger.recordOutput("LeftShooter/SpinMotorEnabled", LeftShooterConstants.spinMotorEnabled);
         Logger.recordOutput("LeftShooter/FlywheelSetpoint", flywheelSetpoint);
         Logger.recordOutput("LeftShooter/SpinSetpoint", spinSetpoint);
         Logger.recordOutput("LeftShooter/SpinRatio", spinRatio.get());
         Logger.recordOutput("LeftShooter/FlywheelFailed", flywheelFailed);
+        if (getCurrentCommand() != null) {
+            Logger.recordOutput(
+                    "LeftShooter/CurrentCommand", getCurrentCommand().getName());
+        } else {
+            Logger.recordOutput("LeftShooter/CurrentCommand", "None");
+        }
     }
 
     /**

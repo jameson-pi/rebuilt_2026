@@ -20,13 +20,13 @@ public class ShooterConstants {
     public static final AngularVelocity maxFlywheelVelocity = RotationsPerSecond.of(100.0); // 6000 RPM
 
     // Velocity tolerance
-    public static final AngularVelocity flywheelVelocityTolerance = RotationsPerSecond.of(100.0 / 60.0); // 100 RPM
+    public static final AngularVelocity flywheelVelocityTolerance = RotationsPerSecond.of(2); // 120 RPM
     public static final AngularVelocity maxVelocityDifference =
             RotationsPerSecond.of(500.0 / 60.0); // 500 RPM difference
 
     // Acceleration mismatch thresholds
-    public static final double accelMismatchToleranceRPM = 150.0;
-    public static final int accelMismatchCycles = 10;
+    public static final double accelMismatchToleranceRPM = 1000000;
+    public static final int accelMismatchCycles = 100000000;
 
     // ==================== Simulation Constants ====================
     public static final Distance shooterHeight = Meters.of(0.5);

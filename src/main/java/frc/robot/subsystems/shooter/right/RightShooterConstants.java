@@ -17,8 +17,10 @@ public class RightShooterConstants {
     // CAN bus name
     public static final String canBusName = "rio";
 
-    // Feature flag
+    // Feature flags
     public static final boolean enabled = false;
+    public static final boolean followerEnabled = true;
+    public static final boolean spinMotorEnabled = true;
 
     // Motor inversion (right side is clockwise positive)
     public static final boolean flywheelInverted = true; // Clockwise_Positive

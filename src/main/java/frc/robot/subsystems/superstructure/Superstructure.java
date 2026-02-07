@@ -47,6 +47,11 @@ import frc.robot.subsystems.shooter.right.RightShooterIO;
 import frc.robot.subsystems.shooter.right.RightShooterIOKrakenX60;
 import frc.robot.subsystems.shooter.right.RightShooterIOSim;
 import frc.robot.subsystems.state.RobotState;
+import frc.robot.subsystems.upgoer.Upgoer;
+import frc.robot.subsystems.upgoer.UpgoerConstants;
+import frc.robot.subsystems.upgoer.UpgoerIO;
+import frc.robot.subsystems.upgoer.UpgoerIOKrakenX60;
+import frc.robot.subsystems.upgoer.UpgoerIOSim;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
@@ -73,6 +78,7 @@ public class Superstructure extends SubsystemBase {
     private final LeftShooter leftShooter;
     private final RightShooter rightShooter;
     private final Hood hood;
+    private final Upgoer upgoer;
     private final RobotState robotState;
     private GamePieceTrajectorySimulation gamePieceTrajectorySimulation;
 
@@ -87,28 +93,33 @@ public class Superstructure extends SubsystemBase {
         LeftShooterIO leftShooterIO;
         RightShooterIO rightShooterIO;
         HoodIO hoodIO;
+        UpgoerIO upgoerIO;
 
         switch (Constants.currentMode) {
             case REAL:
                 leftShooterIO = new LeftShooterIOKrakenX60();
                 rightShooterIO = new RightShooterIOKrakenX60();
                 hoodIO = ShooterConstants.hoodEnabled ? new HoodIOKrakenX60() : null;
+                upgoerIO = new UpgoerIOKrakenX60();
                 break;
             case SIM:
                 leftShooterIO = new LeftShooterIOSim();
                 rightShooterIO = new RightShooterIOSim();
                 hoodIO = ShooterConstants.hoodEnabled ? new HoodIOSim() : null;
+                upgoerIO = new UpgoerIOSim();
                 break;
             default:
                 leftShooterIO = new LeftShooterIO() {};
                 rightShooterIO = new RightShooterIO() {};
                 hoodIO = null;
+                upgoerIO = new UpgoerIO() {};
                 break;
         }
 
         this.leftShooter = new LeftShooter(leftShooterIO);
         this.rightShooter = new RightShooter(rightShooterIO);
         this.hood = hoodIO != null ? new Hood(hoodIO) : null;
+        this.upgoer = new Upgoer(upgoerIO);
     }
 
     @Override
@@ -212,6 +223,10 @@ public class Superstructure extends SubsystemBase {
         return hood;
     }
 
+    public Upgoer getUpgoer() {
+        return upgoer;
+    }
+
     public boolean hasHood() {
         return hood != null;
     }
@@ -229,6 +244,10 @@ public class Superstructure extends SubsystemBase {
     public void setFlywheelVelocity(AngularVelocity velocity) {
         leftShooter.setFlywheelVelocity(velocity);
         rightShooter.setFlywheelVelocity(velocity);
+    }
+
+    public void setUpgoerVelocity(AngularVelocity velocity) {
+        upgoer.setVelocity(velocity);
     }
 
     public AngularVelocity getLeftFlywheelVelocity() {
@@ -250,8 +269,16 @@ public class Superstructure extends SubsystemBase {
         rightShooter.stop();
     }
 
+    public void stopUpgoer() {
+        upgoer.stop();
+    }
+
     public Command stopShooterCommand() {
         return leftShooter.stopCommand().alongWith(rightShooter.stopCommand());
+    }
+
+    public Command stopUpgoerCommand() {
+        return upgoer.stopCommand();
     }
 
     /** Record to hold calculated shooting parameters with type-safe units. */
@@ -394,6 +421,20 @@ public class Superstructure extends SubsystemBase {
     public Command aimAtHubWhileDriving(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
         return DriveCommands.joystickDriveAtAngle(drive, xSupplier, ySupplier, () -> getAngleToHub(drive.getPose()))
                 .withName("AimAtHub");
+    }
+
+    /** Command that fires the shooter (feeds upgoer only when flywheels are at speed). */
+    public Command fireCommand() {
+        return Commands.run(
+                        () -> {
+                            if (atTargetVelocity()) {
+                                upgoer.setVelocity(UpgoerConstants.defaultFeedVelocity);
+                            } else {
+                                upgoer.stop();
+                            }
+                        },
+                        upgoer)
+                .withName("SuperstructureFire");
     }
 
     /** Full auto-aim command: aims robot at hub AND sets hood/flywheel automatically. */

@@ -2,7 +2,8 @@ package frc.robot.subsystems.shooter.left;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.units.measure.Current;
+import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 
 /** Constants specific to the left shooter. */
@@ -17,12 +18,20 @@ public class LeftShooterConstants {
     // CAN bus name
     public static final String canBusName = "rio";
 
-    // Feature flag
+    // Feature flags
     public static final boolean enabled = true;
+    public static final boolean followerEnabled = true;
+    public static final boolean spinMotorEnabled = true;
 
     // Motor inversion (left side is counter-clockwise positive)
-    public static final boolean flywheelInverted = false; // CounterClockwise_Positive
-    public static final boolean spinInverted = false; // CounterClockwise_Positive
+    public static final InvertedValue flywheelInverted = InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue spinInverted = InvertedValue.CounterClockwise_Positive;
+
+    // Ramp rates
+    public static final Time flywheelOpenLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
+    public static final Time spinOpenLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
+    public static final Time flywheelClosedLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
+    public static final Time spinClosedLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
 
     // Flywheel PID
     public static final double flywheelKP = 0.1;
@@ -32,13 +41,13 @@ public class LeftShooterConstants {
     public static final double flywheelKS = 0.0;
 
     // Flywheel current limits
-    public static final Current flywheelCurrentLimitStator = Amps.of(80.0);
-    public static final Current flywheelCurrentLimitSupply = Amps.of(60.0);
+    public static final Current flywheelCurrentLimitStator = Amps.of(60.0);
+    public static final Current flywheelCurrentLimitSupply = Amps.of(40.0);
     public static final boolean flywheelCurrentLimitStatorEnable = true;
     public static final boolean flywheelCurrentLimitSupplyEnable = true;
 
     // Spin motor PID
-    public static final double spinKP = 0.1;
+    public static final double spinKP = 0.3;
     public static final double spinKI = 0.0;
     public static final double spinKD = 0.0;
     public static final double spinKV = 0.0;

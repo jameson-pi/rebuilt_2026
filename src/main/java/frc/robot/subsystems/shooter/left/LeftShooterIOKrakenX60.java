@@ -18,6 +18,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.TunableTalonFX;
+import org.littletonrobotics.junction.Logger;
 
 public class LeftShooterIOKrakenX60 implements LeftShooterIO {
     private final TunableTalonFX flywheelMotor;
@@ -38,12 +39,8 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
     private final StatusSignal<Temperature> spinTemp;
 
     public LeftShooterIOKrakenX60() {
-        InvertedValue flywheelInverted = LeftShooterConstants.flywheelInverted
-                ? InvertedValue.Clockwise_Positive
-                : InvertedValue.CounterClockwise_Positive;
-        InvertedValue spinInverted = LeftShooterConstants.spinInverted
-                ? InvertedValue.Clockwise_Positive
-                : InvertedValue.CounterClockwise_Positive;
+        InvertedValue flywheelInverted = LeftShooterConstants.flywheelInverted;
+        InvertedValue spinInverted = LeftShooterConstants.spinInverted;
 
         flywheelMotor = new TunableTalonFX(
                 LeftShooterConstants.flywheelLeaderId,
@@ -56,27 +53,35 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
                         .withKV(LeftShooterConstants.flywheelKV)
                         .withKS(LeftShooterConstants.flywheelKS));
 
-        flywheelFollower = new TunableTalonFX(
-                LeftShooterConstants.flywheelFollowerId,
-                LeftShooterConstants.canBusName,
-                "LeftShooter/FlywheelFollower",
-                new Slot0Configs()
-                        .withKP(LeftShooterConstants.flywheelKP)
-                        .withKI(LeftShooterConstants.flywheelKI)
-                        .withKD(LeftShooterConstants.flywheelKD)
-                        .withKV(LeftShooterConstants.flywheelKV)
-                        .withKS(LeftShooterConstants.flywheelKS));
+        if (LeftShooterConstants.followerEnabled) {
+            flywheelFollower = new TunableTalonFX(
+                    LeftShooterConstants.flywheelFollowerId,
+                    LeftShooterConstants.canBusName,
+                    "LeftShooter/FlywheelFollower",
+                    new Slot0Configs()
+                            .withKP(LeftShooterConstants.flywheelKP)
+                            .withKI(LeftShooterConstants.flywheelKI)
+                            .withKD(LeftShooterConstants.flywheelKD)
+                            .withKV(LeftShooterConstants.flywheelKV)
+                            .withKS(LeftShooterConstants.flywheelKS));
+        } else {
+            flywheelFollower = null;
+        }
 
-        spinMotor = new TunableTalonFX(
-                LeftShooterConstants.spinMotorId,
-                LeftShooterConstants.canBusName,
-                "LeftShooter/Spin",
-                new Slot0Configs()
-                        .withKP(LeftShooterConstants.spinKP)
-                        .withKI(LeftShooterConstants.spinKI)
-                        .withKD(LeftShooterConstants.spinKD)
-                        .withKV(LeftShooterConstants.spinKV)
-                        .withKS(LeftShooterConstants.spinKS));
+        if (LeftShooterConstants.spinMotorEnabled) {
+            spinMotor = new TunableTalonFX(
+                    LeftShooterConstants.spinMotorId,
+                    LeftShooterConstants.canBusName,
+                    "LeftShooter/Spin",
+                    new Slot0Configs()
+                            .withKP(LeftShooterConstants.spinKP)
+                            .withKI(LeftShooterConstants.spinKI)
+                            .withKD(LeftShooterConstants.spinKD)
+                            .withKV(LeftShooterConstants.spinKV)
+                            .withKS(LeftShooterConstants.spinKS));
+        } else {
+            spinMotor = null;
+        }
 
         // Configure flywheel motor
         var flywheelConfig = new TalonFXConfiguration();
@@ -87,22 +92,17 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
         flywheelConfig.CurrentLimits.StatorCurrentLimitEnable = LeftShooterConstants.flywheelCurrentLimitStatorEnable;
         flywheelConfig.CurrentLimits.SupplyCurrentLimit = LeftShooterConstants.flywheelCurrentLimitSupply.in(Amps);
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = LeftShooterConstants.flywheelCurrentLimitSupplyEnable;
+        flywheelConfig.ClosedLoopRamps.withDutyCycleClosedLoopRampPeriod(
+                LeftShooterConstants.flywheelClosedLoopRamp.in(Seconds));
+        flywheelConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(
+                LeftShooterConstants.flywheelOpenLoopRamp.in(Seconds));
+
         tryUntilOk(5, () -> flywheelMotor.applyConfiguration(flywheelConfig, 0.25));
-        tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
 
-        // Configure spin motor
-        var spinConfig = new TalonFXConfiguration();
-        spinConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        spinConfig.MotorOutput.Inverted = spinInverted;
-        spinConfig.Slot0 = spinMotor.getTunableSlot0Configs();
-        spinConfig.CurrentLimits.StatorCurrentLimit = LeftShooterConstants.spinCurrentLimitStator.in(Amps);
-        spinConfig.CurrentLimits.StatorCurrentLimitEnable = LeftShooterConstants.spinCurrentLimitStatorEnable;
-        spinConfig.CurrentLimits.SupplyCurrentLimit = LeftShooterConstants.spinCurrentLimitSupply.in(Amps);
-        spinConfig.CurrentLimits.SupplyCurrentLimitEnable = LeftShooterConstants.spinCurrentLimitSupplyEnable;
-        tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
-
-        // Set follower
-        flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        if (flywheelFollower != null) {
+            tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
+            flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        }
 
         // Get status signals
         flywheelVelocity = flywheelMotor.getVelocity();
@@ -110,66 +110,105 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
         flywheelCurrent = flywheelMotor.getStatorCurrent();
         flywheelTemp = flywheelMotor.getDeviceTemp();
 
-        spinVelocity = spinMotor.getVelocity();
-        spinAppliedVolts = spinMotor.getMotorVoltage();
-        spinCurrent = spinMotor.getStatorCurrent();
-        spinTemp = spinMotor.getDeviceTemp();
+        if (spinMotor != null) {
+            spinVelocity = spinMotor.getVelocity();
+            spinAppliedVolts = spinMotor.getMotorVoltage();
+            spinCurrent = spinMotor.getStatorCurrent();
+            spinTemp = spinMotor.getDeviceTemp();
+        } else {
+            spinVelocity = null;
+            spinAppliedVolts = null;
+            spinCurrent = null;
+            spinTemp = null;
+        }
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0,
-                flywheelVelocity,
-                flywheelAppliedVolts,
-                flywheelCurrent,
-                flywheelTemp,
-                spinVelocity,
-                spinAppliedVolts,
-                spinCurrent,
-                spinTemp);
+        var signals = new java.util.ArrayList<BaseStatusSignal>();
+        signals.add(flywheelVelocity);
+        signals.add(flywheelAppliedVolts);
+        signals.add(flywheelCurrent);
+        signals.add(flywheelTemp);
+        if (spinMotor != null) {
+            signals.add(spinVelocity);
+            signals.add(spinAppliedVolts);
+            signals.add(spinCurrent);
+            signals.add(spinTemp);
+        }
 
-        ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower, spinMotor);
+        BaseStatusSignal.setUpdateFrequencyForAll(50.0, signals.toArray(new BaseStatusSignal[0]));
+
+        if (flywheelFollower != null && spinMotor != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower, spinMotor);
+        } else if (flywheelFollower != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelFollower);
+        } else if (spinMotor != null) {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, spinMotor);
+        } else {
+            ParentDevice.optimizeBusUtilizationForAll(flywheelMotor);
+        }
     }
 
     @Override
     public void updateInputs(LeftShooterIOInputs inputs) {
         flywheelMotor.updateTunableGains();
-        spinMotor.updateTunableGains();
+        if (spinMotor != null) {
+            spinMotor.updateTunableGains();
+        }
 
-        BaseStatusSignal.refreshAll(
-                flywheelVelocity,
-                flywheelAppliedVolts,
-                flywheelCurrent,
-                flywheelTemp,
-                spinVelocity,
-                spinAppliedVolts,
-                spinCurrent,
-                spinTemp);
+        var signals = new java.util.ArrayList<BaseStatusSignal>();
+        signals.add(flywheelVelocity);
+        signals.add(flywheelAppliedVolts);
+        signals.add(flywheelCurrent);
+        signals.add(flywheelTemp);
+        if (spinMotor != null) {
+            signals.add(spinVelocity);
+            signals.add(spinAppliedVolts);
+            signals.add(spinCurrent);
+            signals.add(spinTemp);
+        }
+
+        BaseStatusSignal.refreshAll(signals.toArray(new BaseStatusSignal[0]));
 
         inputs.flywheelVelocity = flywheelVelocity.getValue();
         inputs.flywheelAppliedVoltage = flywheelAppliedVolts.getValue();
         inputs.flywheelCurrent = flywheelCurrent.getValue();
         inputs.flywheelTemp = flywheelTemp.getValue();
-        inputs.spinVelocity = spinVelocity.getValue();
-        inputs.spinAppliedVoltage = spinAppliedVolts.getValue();
-        inputs.spinCurrent = spinCurrent.getValue();
-        inputs.spinTemp = spinTemp.getValue();
+
+        if (spinMotor != null) {
+            inputs.spinVelocity = spinVelocity.getValue();
+            inputs.spinAppliedVoltage = spinAppliedVolts.getValue();
+            inputs.spinCurrent = spinCurrent.getValue();
+            inputs.spinTemp = spinTemp.getValue();
+        } else {
+            inputs.spinVelocity = RPM.of(0.0);
+            inputs.spinAppliedVoltage = Volts.of(0.0);
+            inputs.spinCurrent = Amps.of(0.0);
+            inputs.spinTemp = Celsius.of(0.0);
+        }
+        Logger.recordOutput(
+                "LeftShooter/FlywheelVelocity (RPS)",
+                flywheelMotor.getVelocity().getValue().in(RotationsPerSecond));
     }
 
     @Override
     public void setFlywheelVelocity(AngularVelocity velocity) {
-        double rotationsPerSecond = velocity.in(RotationsPerSecond);
-        flywheelMotor.setControl(velocityRequest.withVelocity(rotationsPerSecond));
+        flywheelMotor.setControl(new VelocityVoltage(velocity));
     }
 
     @Override
     public void setSpinVelocity(AngularVelocity velocity) {
-        double rotationsPerSecond = velocity.in(RotationsPerSecond);
-        spinMotor.setControl(spinVelocityRequest.withVelocity(rotationsPerSecond));
+        if (spinMotor != null) {
+            spinMotor.setControl(new VelocityVoltage(velocity));
+        }
     }
 
     @Override
     public void stop() {
         flywheelMotor.stopMotor();
-        flywheelFollower.stopMotor();
-        spinMotor.stopMotor();
+        if (flywheelFollower != null) {
+            flywheelFollower.stopMotor();
+        }
+        if (spinMotor != null) {
+            spinMotor.stopMotor();
+        }
     }
 }
