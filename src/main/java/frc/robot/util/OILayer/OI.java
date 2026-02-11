@@ -26,7 +26,6 @@ public interface OI {
         return noButton;
     }
 
-
     default Trigger stopIntake() {
         return noButton;
     }

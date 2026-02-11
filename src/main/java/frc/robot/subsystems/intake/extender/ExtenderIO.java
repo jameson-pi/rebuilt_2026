@@ -24,6 +24,8 @@ public interface ExtenderIO {
 
     default void retract() {}
 
+    default void toggle() {}
+
     default void setPosition(Angle position) {}
 
     default void zero() {}

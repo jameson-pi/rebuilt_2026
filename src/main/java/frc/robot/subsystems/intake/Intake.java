@@ -33,6 +33,10 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> extender.retract());
     }
 
+    public Command toggleIntake() {
+        return runOnce(() -> extender.toggle());
+    }
+
     // Roller Commands
     public Command intakeRollerCommand() {
         return run(() -> roller.start());

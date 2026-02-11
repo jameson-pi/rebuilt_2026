@@ -58,8 +58,8 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderPID.kI = ExtenderConstants.PIDF.kI;
         extenderPID.kD = ExtenderConstants.PIDF.kD;
 
-        extenderMotor =
-                new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/Extender", extenderPID);
+        extenderMotor = new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/Extender",
+                extenderPID);
 
         extenderMotorConfig = new TalonFXConfiguration();
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
@@ -111,6 +111,15 @@ public class ExtenderIOSim implements ExtenderIO {
     @Override
     public void retract() {
         setPosition(ExtenderConstants.kExtenderIntakeAngle);
+    }
+
+    @Override
+    public void toggle() {
+        if (armSim.hasHitUpperLimit()) {
+            extend();
+        } else if (armSim.hasHitLowerLimit()) {
+            retract();
+        }
     }
 
     @Override

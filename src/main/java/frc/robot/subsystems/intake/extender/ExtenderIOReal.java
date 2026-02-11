@@ -76,6 +76,21 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     @Override
+    public void toggle() {
+        if (Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
+                        .in(Degrees))
+                < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
+
+                    extend();
+
+                }else if(Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+                                .in(Degrees))
+                        < ExtenderConstants.kExtenderTolerance.in(Degrees)){
+                            retract();
+                        }
+    }
+
+    @Override
     public void updateInputs(ExtenderIOInputs inputs) {
         inputs.isExtended =
                 Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
