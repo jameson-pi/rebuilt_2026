@@ -84,4 +84,14 @@ public class OIKeyboard implements OI {
     public Trigger fireShooter() {
         return V;
     }
+
+    @Override
+    public Trigger stopSuperstructure() {
+        return X;
+    }
+
+    @Override
+    public Trigger driveLock0() {
+        return Home;
+    }
 }

@@ -70,13 +70,22 @@ public class OIXbox implements OI {
     }
 
     @Override
+    public Trigger driveLock0() {
+        return a;
+    }
+
+    public Trigger xPattern() {
+        return x;
+    }
+
+    @Override
     public Trigger spinUpShooter() {
-        return rightTriggerAsButton;
+        return rightBumper;
     }
 
     @Override
     public Trigger fireShooter() {
-        return rightBumper;
+        return leftBumper;
     }
 
     @Override
@@ -85,7 +94,42 @@ public class OIXbox implements OI {
     }
 
     @Override
-    public Trigger driveLock0() {
-        return a;
+    public DoubleSupplier intake() {
+        return rightTrigger;
+    }
+
+    @Override
+    public DoubleSupplier outtake() {
+        return leftTrigger;
+    }
+
+    @Override
+    public Trigger toggleIntakeState() {
+        return y;
+    }
+
+    @Override
+    public Trigger lockOnTarget() {
+        return back;
+    }
+
+    @Override
+    public Trigger declimb() {
+        return dPadDown;
+    }
+
+    @Override
+    public Trigger climb_l1() {
+        return dPadUp;
+    }
+
+    @Override
+    public Trigger climb_l2() {
+        return dPadRight;
+    }
+
+    @Override
+    public Trigger climb_l3() {
+        return dPadLeft;
     }
 }
