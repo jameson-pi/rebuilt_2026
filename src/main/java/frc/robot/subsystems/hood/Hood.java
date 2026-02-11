@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -35,6 +36,7 @@ public class Hood extends SubsystemBase {
     private final LoggedNetworkNumber hoodKD = new LoggedNetworkNumber("Hood/kD", HoodConstants.defaultKD);
 
     // Setpoint
+    @AutoLogOutput(key = "Hood/AngleSetpoint")
     private Angle angleSetpoint = Degrees.of(0.0);
 
     public Hood(HoodIO io) {

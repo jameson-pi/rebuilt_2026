@@ -22,10 +22,14 @@ public class LeftShooter extends SubsystemBase {
             new LoggedNetworkNumber("LeftShooter/SpinRatio", LeftShooterConstants.defaultSpinRatio);
 
     // Setpoints
+    @AutoLogOutput(key = "LeftShooter/FlywheelSetpoint")
     private AngularVelocity flywheelSetpoint = RPM.of(0.0);
+
+    @AutoLogOutput(key = "LeftShooter/SpinSetpoint")
     private AngularVelocity spinSetpoint = RPM.of(0.0);
 
     // Failure state
+    @AutoLogOutput(key = "LeftShooter/FlywheelFailed")
     private boolean flywheelFailed = false;
 
     public LeftShooter(LeftShooterIO io) {

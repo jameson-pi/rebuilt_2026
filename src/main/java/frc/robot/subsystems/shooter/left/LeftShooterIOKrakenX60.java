@@ -25,9 +25,6 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
     private final TunableTalonFX flywheelFollower;
     private final TunableTalonFX spinMotor;
 
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
-    private final VelocityVoltage spinVelocityRequest = new VelocityVoltage(0.0);
-
     private final StatusSignal<AngularVelocity> flywheelVelocity;
     private final StatusSignal<Voltage> flywheelAppliedVolts;
     private final StatusSignal<Current> flywheelCurrent;
@@ -103,7 +100,22 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
             tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
             flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }
-
+        
+        if (spinMotor != null) {
+            var spinConfig = new TalonFXConfiguration();
+            spinConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+            spinConfig.MotorOutput.Inverted = spinInverted;
+            spinConfig.Slot0 = spinMotor.getTunableSlot0Configs();
+            spinConfig.CurrentLimits.StatorCurrentLimit = LeftShooterConstants.spinCurrentLimitStator.in(Amps);
+            spinConfig.CurrentLimits.StatorCurrentLimitEnable = LeftShooterConstants.spinCurrentLimitStatorEnable;
+            spinConfig.CurrentLimits.SupplyCurrentLimit = LeftShooterConstants.spinCurrentLimitSupply.in(Amps);
+            spinConfig.CurrentLimits.SupplyCurrentLimitEnable = LeftShooterConstants.spinCurrentLimitSupplyEnable;
+            spinConfig.ClosedLoopRamps.withDutyCycleClosedLoopRampPeriod(
+                    LeftShooterConstants.spinClosedLoopRamp.in(Seconds));
+            spinConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(
+                    LeftShooterConstants.spinOpenLoopRamp.in(Seconds));
+            tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
+        }
         // Get status signals
         flywheelVelocity = flywheelMotor.getVelocity();
         flywheelAppliedVolts = flywheelMotor.getMotorVoltage();

@@ -38,12 +38,8 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
     private final StatusSignal<Temperature> spinTemp;
 
     public RightShooterIOKrakenX60() {
-        InvertedValue flywheelInverted = RightShooterConstants.flywheelInverted
-                ? InvertedValue.Clockwise_Positive
-                : InvertedValue.CounterClockwise_Positive;
-        InvertedValue spinInverted = RightShooterConstants.spinInverted
-                ? InvertedValue.Clockwise_Positive
-                : InvertedValue.CounterClockwise_Positive;
+        InvertedValue flywheelInverted = RightShooterConstants.flywheelInverted;
+        InvertedValue spinInverted = RightShooterConstants.spinInverted;
 
         flywheelMotor = new TunableTalonFX(
                 RightShooterConstants.flywheelLeaderId,
@@ -95,6 +91,11 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
         flywheelConfig.CurrentLimits.StatorCurrentLimitEnable = RightShooterConstants.flywheelCurrentLimitStatorEnable;
         flywheelConfig.CurrentLimits.SupplyCurrentLimit = RightShooterConstants.flywheelCurrentLimitSupply.in(Amps);
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = RightShooterConstants.flywheelCurrentLimitSupplyEnable;
+        flywheelConfig.ClosedLoopRamps.withDutyCycleClosedLoopRampPeriod(
+                RightShooterConstants.flywheelClosedLoopRamp.in(Seconds));
+        flywheelConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(
+                RightShooterConstants.flywheelOpenLoopRamp.in(Seconds));
+
         tryUntilOk(5, () -> flywheelMotor.applyConfiguration(flywheelConfig, 0.25));
 
         if (flywheelFollower != null) {
@@ -195,17 +196,20 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
             inputs.spinCurrent = Amps.of(0.0);
             inputs.spinTemp = Celsius.of(0.0);
         }
+        Logger.recordOutput(
+                "RightShooter/FlywheelVelocity (RPS)",
+                flywheelMotor.getVelocity().getValue().in(RotationsPerSecond));
     }
 
     @Override
     public void setFlywheelVelocity(AngularVelocity velocity) {
-        flywheelMotor.setControl(velocityRequest.withVelocity(velocity.in(RotationsPerSecond)));
+        flywheelMotor.setControl(new VelocityVoltage(velocity));
     }
 
     @Override
     public void setSpinVelocity(AngularVelocity velocity) {
         if (spinMotor != null) {
-            spinMotor.setControl(spinVelocityRequest.withVelocity(velocity.in(RotationsPerSecond)));
+            spinMotor.setControl(new VelocityVoltage(velocity));
         }
     }
 

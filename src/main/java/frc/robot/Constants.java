@@ -60,6 +60,13 @@ public final class Constants {
         }
     }
 
+    public static final class EnabledSubsystems {
+        public static final boolean kShooterLeft = true;
+        public static final boolean kShooterRight = true;
+        public static final boolean kHood = true;
+        public static final boolean kUpgoer = true;
+    }
+
     public static enum Mode {
         /** Running on a real robot. */
         REAL,

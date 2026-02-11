@@ -19,7 +19,7 @@ public class LeftShooterConstants {
     public static final String canBusName = "rio";
 
     // Feature flags
-    public static final boolean enabled = true;
+    public static final boolean enabled = Constants.EnabledSubsystems.kShooterLeft;
     public static final boolean followerEnabled = false;
     public static final boolean spinMotorEnabled = false;
 
@@ -28,10 +28,10 @@ public class LeftShooterConstants {
     public static final InvertedValue spinInverted = InvertedValue.CounterClockwise_Positive;
 
     // Ramp rates
-    public static final Time flywheelOpenLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
-    public static final Time spinOpenLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
-    public static final Time flywheelClosedLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
-    public static final Time spinClosedLoopRamp = Seconds.of(0.15); // seconds from 0 to full throttle
+    public static final Time flywheelOpenLoopRamp = Seconds.of(0.05); // seconds from 0 to full throttle
+    public static final Time spinOpenLoopRamp = Seconds.of(0.05); // seconds from 0 to full throttle
+    public static final Time flywheelClosedLoopRamp = Seconds.of(0.05); // seconds from 0 to full throttle
+    public static final Time spinClosedLoopRamp = Seconds.of(0.05); // seconds from 0 to full throttle
 
     // Flywheel PID
     public static final double flywheelKP = 0.6;

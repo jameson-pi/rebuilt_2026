@@ -43,7 +43,11 @@ public class Upgoer extends SubsystemBase {
     /** Set the feeder velocity. */
     public void setVelocity(AngularVelocity velocity) {
         setpoint = velocity;
-        io.setVelocity(velocity);
+        if (UpgoerConstants.enabled) {
+            io.setVelocity(velocity);
+        } else {
+            io.setVelocity(RPM.of(0.0));
+        }
     }
 
     /** Stop the feeder. */

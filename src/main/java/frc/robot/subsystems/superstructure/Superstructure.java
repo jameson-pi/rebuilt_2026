@@ -18,10 +18,10 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,16 +36,10 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOKrakenX60;
 import frc.robot.subsystems.hood.HoodIOSim;
-import frc.robot.subsystems.shooter.GamePieceTrajectorySimulation;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.left.LeftShooter;
-import frc.robot.subsystems.shooter.left.LeftShooterIO;
-import frc.robot.subsystems.shooter.left.LeftShooterIOKrakenX60;
-import frc.robot.subsystems.shooter.left.LeftShooterIOSim;
 import frc.robot.subsystems.shooter.right.RightShooter;
-import frc.robot.subsystems.shooter.right.RightShooterIO;
-import frc.robot.subsystems.shooter.right.RightShooterIOKrakenX60;
-import frc.robot.subsystems.shooter.right.RightShooterIOSim;
 import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.upgoer.Upgoer;
 import frc.robot.subsystems.upgoer.UpgoerConstants;
@@ -75,8 +69,13 @@ public class Superstructure extends SubsystemBase {
     private static final LoggedNetworkNumber rpmMultiplier =
             new LoggedNetworkNumber("Shooting/RPMMultiplier", ShooterConstants.defaultRpmMultiplier);
 
-    private final LeftShooter leftShooter;
-    private final RightShooter rightShooter;
+    // Testing / Bench Mode
+    private static final LoggedNetworkNumber benchModeEnabled =
+            new LoggedNetworkNumber("Shooting/BenchMode/Enabled", ShooterConstants.defaultBenchModeEnabled);
+    private static final LoggedNetworkNumber benchModeDistanceFeet =
+            new LoggedNetworkNumber("Shooting/BenchMode/DistanceFeet", ShooterConstants.defaultBenchModeDistanceFeet);
+
+    private final Shooter shooter;
     private final Hood hood;
     private final Upgoer upgoer;
     private final RobotState robotState;
@@ -90,34 +89,26 @@ public class Superstructure extends SubsystemBase {
         }
         this.robotState = createdState;
 
-        LeftShooterIO leftShooterIO;
-        RightShooterIO rightShooterIO;
+        this.shooter = new Shooter();
+
         HoodIO hoodIO;
         UpgoerIO upgoerIO;
 
         switch (Constants.currentMode) {
             case REAL:
-                leftShooterIO = new LeftShooterIOKrakenX60();
-                rightShooterIO = new RightShooterIOKrakenX60();
-                hoodIO = ShooterConstants.hoodEnabled ? new HoodIOKrakenX60() : null;
-                upgoerIO = new UpgoerIOKrakenX60();
+                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOKrakenX60() : null;
+                upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOKrakenX60() : new UpgoerIO() {};
                 break;
             case SIM:
-                leftShooterIO = new LeftShooterIOSim();
-                rightShooterIO = new RightShooterIOSim();
-                hoodIO = ShooterConstants.hoodEnabled ? new HoodIOSim() : null;
-                upgoerIO = new UpgoerIOSim();
+                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOSim() : null;
+                upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOSim() : new UpgoerIO() {};
                 break;
             default:
-                leftShooterIO = new LeftShooterIO() {};
-                rightShooterIO = new RightShooterIO() {};
                 hoodIO = null;
                 upgoerIO = new UpgoerIO() {};
                 break;
         }
 
-        this.leftShooter = new LeftShooter(leftShooterIO);
-        this.rightShooter = new RightShooter(rightShooterIO);
         this.hood = hoodIO != null ? new Hood(hoodIO) : null;
         this.upgoer = new Upgoer(upgoerIO);
     }
@@ -208,15 +199,15 @@ public class Superstructure extends SubsystemBase {
         }
 
         return new ShooterCalibrationCommand(
-                hood, leftShooter, gamePieceTrajectorySimulation, driveSimulation, poseResetter);
+                hood, shooter.getLeft(), gamePieceTrajectorySimulation, driveSimulation, poseResetter);
     }
 
     public LeftShooter getLeftShooter() {
-        return leftShooter;
+        return shooter.getLeft();
     }
 
     public RightShooter getRightShooter() {
-        return rightShooter;
+        return shooter.getRight();
     }
 
     public Hood getHood() {
@@ -236,14 +227,13 @@ public class Superstructure extends SubsystemBase {
     }
 
     public void setHoodAngle(Angle angle) {
-        if (hood != null && ShooterConstants.hoodEnabled) {
+        if (hood != null) {
             hood.setAngle(angle);
         }
     }
 
     public void setFlywheelVelocity(AngularVelocity velocity) {
-        leftShooter.setFlywheelVelocity(velocity);
-        rightShooter.setFlywheelVelocity(velocity);
+        shooter.setFlywheelVelocity(velocity);
     }
 
     public void setUpgoerVelocity(AngularVelocity velocity) {
@@ -251,11 +241,11 @@ public class Superstructure extends SubsystemBase {
     }
 
     public AngularVelocity getLeftFlywheelVelocity() {
-        return leftShooter.getFlywheelVelocity();
+        return shooter.getLeft().getFlywheelVelocity();
     }
 
     public AngularVelocity getRightFlywheelVelocity() {
-        return rightShooter.getFlywheelVelocity();
+        return shooter.getRight().getFlywheelVelocity();
     }
 
     public AngularVelocity getAverageFlywheelVelocity() {
@@ -265,8 +255,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     public void stopShooter() {
-        leftShooter.stop();
-        rightShooter.stop();
+        shooter.stop();
     }
 
     public void stopUpgoer() {
@@ -274,15 +263,12 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command stopShooterCommand() {
-        return leftShooter.stopCommand().alongWith(rightShooter.stopCommand());
+        return shooter.stopCommand();
     }
 
     public Command stopUpgoerCommand() {
         return upgoer.stopCommand();
     }
-
-    /** Record to hold calculated shooting parameters with type-safe units. */
-    public record ShootingParameters(Angle hoodAngle, AngularVelocity flywheelVelocity) {}
 
     /** Calculate the distance from the robot to the hub. */
     public Distance getDistanceToHub(Pose2d robotPose) {
@@ -307,65 +293,6 @@ public class Superstructure extends SubsystemBase {
         return new Rotation2d(toTarget.getX(), toTarget.getY());
     }
 
-    /**
-     * Calculate shooting parameters for a trajectory that: 1. Starts at shooter height 2. Peaks at maxHeight (default
-     * 8ft) 3. Lands at targetHeight (default 6ft / hub opening)
-     */
-    public ShootingParameters calculateShootingParameters(Distance distance) {
-        if (!ShooterConstants.hoodEnabled) {
-            return calculateParametersForFixedAngle(distance, ShooterConstants.fixedHoodAngle);
-        }
-
-        Distance maxHeight = Feet.of(maxHeightFeet.get());
-        Distance targetHeight = Feet.of(targetHeightFeet.get());
-        Distance startHeight = ShooterConstants.shooterHeight;
-
-        Distance riseHeight = maxHeight.minus(startHeight);
-        Distance fallHeight = maxHeight.minus(targetHeight);
-
-        if (riseHeight.in(Meters) <= 0 || fallHeight.in(Meters) < 0) {
-            return new ShootingParameters(Degrees.of(45.0), ShooterConstants.minShootingFlywheelVelocity);
-        }
-
-        double gravityMps2 = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
-        double riseMeters = riseHeight.in(Meters);
-        double fallMeters = fallHeight.in(Meters);
-        double distanceMeters = distance.in(Meters);
-
-        double timeToRise = Math.sqrt(2.0 * riseMeters / gravityMps2);
-        double timeToFall = Math.sqrt(2.0 * fallMeters / gravityMps2);
-        double totalTime = timeToRise + timeToFall;
-
-        LinearVelocity horizontalVelocity = MetersPerSecond.of(distanceMeters / totalTime);
-        LinearVelocity verticalVelocity = MetersPerSecond.of(gravityMps2 * timeToRise);
-
-        double vx = horizontalVelocity.in(MetersPerSecond);
-        double vy = verticalVelocity.in(MetersPerSecond);
-        Angle launchAngle = Radians.of(Math.atan2(vy, vx));
-        LinearVelocity launchSpeed = MetersPerSecond.of(Math.sqrt(vx * vx + vy * vy));
-
-        Angle hoodAngle = Degrees.of(launchAngle.in(Degrees) + hoodAngleOffset.get());
-
-        double hoodDegrees = hoodAngle.in(Degrees);
-        hoodDegrees = Math.max(
-                ShooterConstants.minHoodAngle.in(Degrees),
-                Math.min(ShooterConstants.maxHoodAngle.in(Degrees), hoodDegrees));
-        hoodAngle = Degrees.of(hoodDegrees);
-
-        double flywheelRadiusMeters = ShooterConstants.flywheelRadius.in(Meters);
-        double launchSpeedMps = launchSpeed.in(MetersPerSecond);
-        double angularVelocityRadPerSec = (launchSpeedMps / ShooterConstants.launchEfficiency) / flywheelRadiusMeters;
-        AngularVelocity flywheelVelocity = RadiansPerSecond.of(angularVelocityRadPerSec * rpmMultiplier.get());
-
-        double rpm = flywheelVelocity.in(RPM);
-        rpm = Math.max(
-                ShooterConstants.minShootingFlywheelVelocity.in(RPM),
-                Math.min(ShooterConstants.maxShootingFlywheelVelocity.in(RPM), rpm));
-        flywheelVelocity = RPM.of(rpm);
-
-        return new ShootingParameters(hoodAngle, flywheelVelocity);
-    }
-
     public boolean isInShootingZone(Pose2d robotPose) {
         double fieldLengthMeters = FieldConstants.FIELD_LENGTH.in(Meters);
         double xMeters = robotPose.getTranslation().getX();
@@ -375,67 +302,55 @@ public class Superstructure extends SubsystemBase {
         return distanceFromOwnWall <= fieldLengthMeters / 2.0;
     }
 
-    private ShootingParameters calculateParametersForFixedAngle(Distance distance, Angle fixedAngle) {
-        double distanceMeters = distance.in(Meters);
-        double angleRadians = fixedAngle.in(Radians);
-        double gravityMps2 = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
-
-        // Height difference: hub opening height minus shooter height
-        double targetHeightMeters = FieldConstants.HUB_OPENING_HEIGHT.in(Meters);
-        double shooterHeightMeters = ShooterConstants.shooterHeight.in(Meters);
-        double deltaH = targetHeightMeters - shooterHeightMeters;
-
-        double cosTheta = Math.cos(angleRadians);
-        double tanTheta = Math.tan(angleRadians);
-
-        // The denominator of the velocity formula: x·tan(θ) - Δh
-        // This must be positive for a valid trajectory (ball must arc above the target)
-        double denominator = distanceMeters * tanTheta - deltaH;
-
-        if (denominator <= 0.01 || Math.abs(cosTheta) < 0.001) {
-            // Trajectory cannot reach the target at this angle from this distance
-            return new ShootingParameters(fixedAngle, ShooterConstants.maxShootingFlywheelVelocity);
-        }
-
-        // v = (x / cos(θ)) · √(g / (2 · (x·tan(θ) - Δh)))
-        double launchSpeedMps = (distanceMeters / cosTheta) * Math.sqrt(gravityMps2 / (2.0 * denominator));
-        launchSpeedMps *= rpmMultiplier.get();
-
-        double flywheelRadiusMeters = ShooterConstants.flywheelRadius.in(Meters);
-        double angularVelocityRadPerSec = (launchSpeedMps / ShooterConstants.launchEfficiency) / flywheelRadiusMeters;
-        AngularVelocity flywheelVelocity = RadiansPerSecond.of(angularVelocityRadPerSec);
-
-        double rpm = flywheelVelocity.in(RPM);
-        rpm = Math.max(
-                ShooterConstants.minShootingFlywheelVelocity.in(RPM),
-                Math.min(ShooterConstants.maxShootingFlywheelVelocity.in(RPM), rpm));
-        flywheelVelocity = RPM.of(rpm);
-
-        return new ShootingParameters(fixedAngle, flywheelVelocity);
-    }
-
     /** Command that continuously updates hood angle and flywheel speed based on distance to hub. */
-    public Command autoSpeedShooter(Supplier<Pose2d> poseSupplier) {
+    public Command autoSpeedShooter(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> velocitySupplier) {
         var requirements = hood != null
-                ? new SubsystemBase[] {hood, leftShooter, rightShooter}
-                : new SubsystemBase[] {leftShooter, rightShooter};
+                ? new SubsystemBase[] {hood, shooter.getLeft(), shooter.getRight()}
+                : new SubsystemBase[] {shooter.getLeft(), shooter.getRight()};
 
         return Commands.run(
                         () -> {
-                            Pose2d robotPose = poseSupplier.get();
-                            Distance distance = getDistanceToHub(robotPose);
+                            Pose2d robotPose;
+                            ChassisSpeeds speeds;
+
+                            if (benchModeEnabled.get() > 0.5) {
+                                // Bench mode: Calculate a virtual pose at the specified distance
+                                double distMeters =
+                                        Feet.of(benchModeDistanceFeet.get()).in(Meters);
+                                // Hub is usually at (FieldLength - distance, FieldWidth/2) or similar.
+                                // We'll just mock a static pose at that distance from the hub.
+                                Translation2d hubPos = FieldConstants.getHubPosition();
+                                robotPose = new Pose2d(hubPos.getX() - distMeters, hubPos.getY(), new Rotation2d());
+                                speeds = new ChassisSpeeds();
+                            } else {
+                                robotPose = poseSupplier.get();
+                                speeds = velocitySupplier.get();
+                            }
+
                             boolean inZone = isInShootingZone(robotPose);
 
-                            Logger.recordOutput("Shooting/DistanceToHub", distance.in(Meters));
                             Logger.recordOutput("Shooting/InShootingZone", inZone);
 
                             if (inZone) {
-                                ShootingParameters params = calculateShootingParameters(distance);
+                                TrajectoryBall.ShootingParameters params = TrajectoryBall.calculate(
+                                        hasHood(),
+                                        robotPose,
+                                        speeds,
+                                        Feet.of(maxHeightFeet.get()),
+                                        Feet.of(targetHeightFeet.get()),
+                                        hoodAngleOffset.get(),
+                                        rpmMultiplier.get(),
+                                        ShooterConstants.sotfEnabled);
+
                                 Angle hoodAngle = params.hoodAngle();
                                 AngularVelocity flywheelVelocity = params.flywheelVelocity();
 
+                                Logger.recordOutput(
+                                        "Shooting/DistanceToHub",
+                                        getDistanceToHub(robotPose).in(Meters));
                                 Logger.recordOutput("Shooting/CalculatedHoodAngle", hoodAngle.in(Degrees));
                                 Logger.recordOutput("Shooting/CalculatedRPM", flywheelVelocity.in(RPM));
+                                Logger.recordOutput("Shooting/TargetHeading", params.targetHeading());
 
                                 setHoodAngle(hoodAngle);
                                 setFlywheelVelocity(flywheelVelocity);
@@ -450,6 +365,13 @@ public class Superstructure extends SubsystemBase {
                 .withName("AutoAimShooter");
     }
 
+    public Command autoSpeedShooter(Supplier<Pose2d> poseSupplier) {
+        return autoSpeedShooter(poseSupplier, () -> new ChassisSpeeds());
+    }
+
+    public Command autoSpeedShooter() {
+        return autoSpeedShooter(() -> new Pose2d(), () -> new ChassisSpeeds());
+    }
     /** Command that aims the robot at the hub while driving. */
     public Command aimAtHubWhileDriving(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
         return DriveCommands.joystickDriveAtAngle(drive, xSupplier, ySupplier, () -> getAngleToHub(drive.getPose()))
@@ -472,10 +394,10 @@ public class Superstructure extends SubsystemBase {
 
     /** Full auto-aim command: aims robot at hub AND sets hood/flywheel automatically. */
     public Command fullAutoAim(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-        Command command = aimAtHubWhileDriving(drive, xSupplier, ySupplier)
-                .alongWith(autoSpeedShooter(drive::getPose))
-                .withName("FullAutoAim");
-        return command.beforeStarting(() -> robotState.setMode(RobotState.Mode.SHOOTING))
+        return aimAtHubWhileDriving(drive, xSupplier, ySupplier)
+                .alongWith(autoSpeedShooter(drive::getPose, drive::getChassisSpeeds))
+                .withName("FullAutoAim")
+                .beforeStarting(() -> robotState.setMode(RobotState.Mode.SHOOTING))
                 .finallyDo(() -> robotState.setMode(RobotState.Mode.IDLE));
     }
 
@@ -490,11 +412,11 @@ public class Superstructure extends SubsystemBase {
         };
 
         return DriveCommands.joystickDriveAtAngle(drive, xSupplier, ySupplier, angleSupplier)
-                .alongWith(autoSpeedShooter(drive::getPose))
+                .alongWith(autoSpeedShooter(drive::getPose, drive::getChassisSpeeds))
                 .withName("SpinUpShooter");
     }
 
     public boolean atTargetVelocity() {
-        return leftShooter.atTargetVelocity() && rightShooter.atTargetVelocity();
+        return shooter.getLeft().atTargetVelocity() && shooter.getRight().atTargetVelocity();
     }
 }

@@ -71,11 +71,21 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger spinUpShooter() {
-        return leftTriggerAsButton;
+        return rightTriggerAsButton;
     }
 
     @Override
     public Trigger fireShooter() {
         return rightBumper;
+    }
+
+    @Override
+    public Trigger stopSuperstructure() {
+        return leftTriggerAsButton;
+    }
+
+    @Override
+    public Trigger driveLock0() {
+        return a;
     }
 }

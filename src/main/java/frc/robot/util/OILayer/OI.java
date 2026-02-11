@@ -93,4 +93,14 @@ public interface OI {
     default Trigger climb_l3() {
         return noButton;
     }
+
+    /** Stop all superstructure mechanisms. */
+    default Trigger stopSuperstructure() {
+        return noButton;
+    }
+
+    /** While held, lock the drive rotation to 0 degrees. */
+    default Trigger driveLock0() {
+        return noButton;
+    }
 }

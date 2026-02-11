@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.units.measure.*;
+import frc.robot.Constants;
 
 /**
  * Shared constants used by both left and right shooters. Per-shooter constants live in left/LeftShooterConstants and
@@ -11,7 +12,10 @@ import edu.wpi.first.units.measure.*;
 public class ShooterConstants {
     // ==================== Feature Flags ====================
     /** Set to false to disable the hood motor entirely (for robots without a hood) */
-    public static final boolean hoodEnabled = false;
+    public static final boolean hoodEnabled = Constants.EnabledSubsystems.kHood;
+
+    /** Set to true to enable Shooting on the Fly compensation */
+    public static final boolean sotfEnabled = true;
 
     /** Fixed hood angle to use when hood is disabled (degrees) */
     public static final Angle fixedHoodAngle = Degrees.of(45.0);
@@ -51,4 +55,8 @@ public class ShooterConstants {
     // Fine-tuning defaults
     public static final double defaultHoodAngleOffset = 0.0;
     public static final double defaultRpmMultiplier = 1.0;
+
+    // Bench Mode Defaults
+    public static final double defaultBenchModeEnabled = 0.0;
+    public static final double defaultBenchModeDistanceFeet = 10.0;
 }

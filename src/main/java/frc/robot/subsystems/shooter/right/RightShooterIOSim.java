@@ -30,11 +30,13 @@ public class RightShooterIOSim implements RightShooterIO {
                 DCMotor.getKrakenX60Foc(2),
                 0.5 * 0.5 * ShooterConstants.flywheelRadius.in(Meters) * ShooterConstants.flywheelRadius.in(Meters),
                 1.0);
+        // Reduced MoI for spin motor
         var spinPlant = LinearSystemId.createFlywheelSystem(DCMotor.getKrakenX44Foc(1), 0.5 * 0.2 * 0.025 * 0.025, 1.0);
 
         flywheelSim = new FlywheelSim(flywheelPlant, DCMotor.getKrakenX60Foc(2));
         spinSim = new FlywheelSim(spinPlant, DCMotor.getKrakenX44Foc(1));
 
+        // Use same PID as LeftShooter
         flywheelController = new PIDController(0.001, 0.0005, 0.0);
         spinController = new PIDController(0.001, 0.0005, 0.0);
 
