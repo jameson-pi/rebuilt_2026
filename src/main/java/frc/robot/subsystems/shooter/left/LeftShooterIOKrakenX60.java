@@ -100,7 +100,7 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
             tryUntilOk(5, () -> flywheelFollower.applyConfiguration(flywheelConfig, 0.25));
             flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }
-        
+
         if (spinMotor != null) {
             var spinConfig = new TalonFXConfiguration();
             spinConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -112,8 +112,7 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
             spinConfig.CurrentLimits.SupplyCurrentLimitEnable = LeftShooterConstants.spinCurrentLimitSupplyEnable;
             spinConfig.ClosedLoopRamps.withDutyCycleClosedLoopRampPeriod(
                     LeftShooterConstants.spinClosedLoopRamp.in(Seconds));
-            spinConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(
-                    LeftShooterConstants.spinOpenLoopRamp.in(Seconds));
+            spinConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(LeftShooterConstants.spinOpenLoopRamp.in(Seconds));
             tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
         }
         // Get status signals

@@ -28,7 +28,6 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.left.LeftShooter;
 import frc.robot.subsystems.superstructure.GamePieceTrajectorySimulation;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;

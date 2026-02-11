@@ -73,15 +73,25 @@ public class RobotContainer {
                         new SwerveDriveSimulation(Drive.createMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
-                        new ModuleIOTalonFXSim(TunerConstants.FrontLeft, driveSimulation.getModules()[0]),
-                        new ModuleIOTalonFXSim(TunerConstants.FrontRight, driveSimulation.getModules()[1]),
-                        new ModuleIOTalonFXSim(TunerConstants.BackLeft, driveSimulation.getModules()[2]),
-                        new ModuleIOTalonFXSim(TunerConstants.BackRight, driveSimulation.getModules()[3]),
+                        new ModuleIOTalonFXSim(
+                                TunerConstants.FrontLeft, driveSimulation.getModules()[0]),
+                        new ModuleIOTalonFXSim(
+                                TunerConstants.FrontRight, driveSimulation.getModules()[1]),
+                        new ModuleIOTalonFXSim(
+                                TunerConstants.BackLeft, driveSimulation.getModules()[2]),
+                        new ModuleIOTalonFXSim(
+                                TunerConstants.BackRight, driveSimulation.getModules()[3]),
                         (pose) -> driveSimulation.setSimulationWorldPose(pose));
                 vision = new Vision(drive);
                 break;
             default:
-                drive = new Drive(new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, (pose) -> {});
+                drive = new Drive(
+                        new GyroIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
+                        (pose) -> {});
                 vision = new Vision(drive);
                 break;
         }
@@ -120,19 +130,16 @@ public class RobotContainer {
 
         // Full auto-aim (aims robot + sets shooter RPM and hood angle)
         Command autoAimCommand = superstructure.fullAutoAim(
-                drive, () -> -oi.driveTranslationY().getAsDouble(), () -> -oi.driveTranslationX().getAsDouble());
+                drive, () -> -oi.driveTranslationY().getAsDouble(), () -> -oi.driveTranslationX()
+                        .getAsDouble());
 
         if (Constants.currentMode == Constants.Mode.SIM) {
-            autoAimCommand = autoAimCommand.alongWith(
-                    Commands.run(
-                                    () -> {
-                                        if (superstructure.hasGamePieceTrajectorySimulation()) {
-                                            superstructure
-                                                    .getGamePieceTrajectorySimulation()
-                                                    .previewTrajectory();
-                                        }
-                                    })
-                            .withName("PreviewTrajectory"));
+            autoAimCommand = autoAimCommand.alongWith(Commands.run(() -> {
+                        if (superstructure.hasGamePieceTrajectorySimulation()) {
+                            superstructure.getGamePieceTrajectorySimulation().previewTrajectory();
+                        }
+                    })
+                    .withName("PreviewTrajectory"));
         }
 
         oi.spinUpShooter().whileTrue(autoAimCommand);
@@ -146,9 +153,8 @@ public class RobotContainer {
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
-                ? () -> drive.setPose(
-                        driveSimulation.getSimulatedDriveTrainPose()) 
-                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); 
+                ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
+                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
         oi.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 
