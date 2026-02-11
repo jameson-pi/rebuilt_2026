@@ -77,13 +77,13 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public void toggle() {
-        if (Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
+        if (Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
                         .in(Degrees))
                 < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
 
                     extend();
 
-                }else if(Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+                }else if(Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
                                 .in(Degrees))
                         < ExtenderConstants.kExtenderTolerance.in(Degrees)){
                             retract();
@@ -93,11 +93,11 @@ public class ExtenderIOReal implements ExtenderIO {
     @Override
     public void updateInputs(ExtenderIOInputs inputs) {
         inputs.isExtended =
-                Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
+                Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
                                 .in(Degrees))
                         < ExtenderConstants.kExtenderTolerance.in(Degrees);
         inputs.isRetracted =
-                Math.abs((extenderEncoder.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+                Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
                                 .in(Degrees))
                         < ExtenderConstants.kExtenderTolerance.in(Degrees);
         inputs.position = extenderEncoder.getAbsolutePosition().getValue();

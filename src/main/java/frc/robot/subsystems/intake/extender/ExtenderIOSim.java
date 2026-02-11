@@ -137,7 +137,7 @@ public class ExtenderIOSim implements ExtenderIO {
         armSim.update(0.02);
         extenderEncoderSim.setRawPosition(armSim.getAngleRads());
 
-        armLigament.setAngle(extenderEncoder.getPosition().getValue());
+        armLigament.setAngle(extenderEncoder.getAbsolutePosition().getValue());
         setpointArmLigament.setAngle(setpoint);
         Logger.recordOutput("Intake/2D-Simulation", armMech);
 
