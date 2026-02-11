@@ -177,8 +177,8 @@ public class RobotContainer {
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
-        // Intake and Outtake
         OI.intake().whileTrue(intake.intakeCommand());
+
 
         // Example Coral Placement Code
         // TODO: delete these code for your own project
