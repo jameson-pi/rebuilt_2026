@@ -1,27 +1,24 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.intake.IntakeConstants.ExtenderConstants;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
+import frc.robot.subsystems.intake.extender.ExtenderIOInputsAutoLogged;
 import frc.robot.subsystems.intake.roller.RollerIO;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
-    private static RollerIO roller;
-    private static ExtenderIO extender;
-    private static RollerIO.IntakeIOInputs rollerInputs;
-    private static ExtenderIO.ExtenderIOInputs extenderInputs;
+    private RollerIO roller;
+    private ExtenderIO extender;
+    private RollerIO.IntakeIOInputs rollerInputs;
+    private ExtenderIO.ExtenderIOInputs extenderInputs;
+    private ExtenderIOInputsAutoLogged extenderInputsAutoLogged;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
         roller = rollerIO;
         extender = extenderIO;
         rollerInputs = new RollerIO.IntakeIOInputs();
-    }
-
-    public Command setPosition(Angle position) {
-        return runOnce(() -> extender.setPosition(position));
     }
 
     // Extender Commands
@@ -39,15 +36,15 @@ public class Intake extends SubsystemBase {
 
     // Roller Commands
     public Command intakeRollerCommand() {
-        return run(() -> roller.start());
+        return Commands.startEnd(() -> roller.start(), () -> roller.stop());
     }
 
     public Command outtakeRollerCommand() {
-        return run(() -> roller.outtake());
+        return Commands.startEnd(() -> roller.outtake(), () -> roller.stop());
     }
 
     public Command stopRollerCommand() {
-        return run(() -> roller.stop());
+        return runOnce(() -> roller.stop());
     }
 
     public Command intakeCommand() {
@@ -58,13 +55,21 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> stopRollerCommand()).andThen(runOnce(() -> stowIntake()));
     }
 
+    public Command goToSiftAngleOneCommand() {
+        return runOnce(() -> extender.goToSiftAngleOne());
+    }
+
+    public Command goToSiftAngleTwoCommand() {
+        return runOnce(() -> extender.goToSiftAngleTwo());
+    }
+
+    public Command outtakeCommand() {
+        return runOnce(() -> extendIntake()).andThen(runEnd(() -> outtakeRollerCommand(), () -> stopRollerCommand()));
+    }
+
     public Command siftFuelCommand() {
-        return Commands.runEnd(
-                () -> Commands.repeatingSequence(
-                        setPosition(ExtenderConstants.kExtenderSiftAngleOne),
-                        setPosition(ExtenderConstants.kExtenderSiftAngleTwo)),
-                () -> extendIntake(),
-                this);
+        return run(() -> Commands.repeatingSequence(goToSiftAngleOneCommand(), goToSiftAngleTwoCommand()))
+                .andThen(extendIntake());
     }
 
     @Override
@@ -72,5 +77,6 @@ public class Intake extends SubsystemBase {
         roller.updateInputs(rollerInputs);
         extender.updateInputs(extenderInputs);
         extender.periodic();
+        Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
     }
 }

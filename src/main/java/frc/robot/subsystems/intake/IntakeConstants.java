@@ -7,13 +7,13 @@ import edu.wpi.first.units.measure.AngularMomentum;
 import edu.wpi.first.units.measure.Distance;
 
 public class IntakeConstants {
-    public class RollerConstants {
+    public static class RollerConstants {
         // TODO: Fix incorrect Constants
         public static final double kIntakeSpeed = 0.5;
         public static final double kOuttakeSpeed = -0.5;
     }
 
-    public class ExtenderConstants {
+    public static class ExtenderConstants {
         public static final int kExtenderTicksPerRevolution = 2048;
         public static final double kGearing = 10.0;
         public static final AngularMomentum kMOI = KilogramMetersSquaredPerSecond.of(0.5);
