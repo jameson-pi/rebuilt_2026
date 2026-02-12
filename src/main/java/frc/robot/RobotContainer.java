@@ -28,8 +28,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOReal;
@@ -53,14 +53,14 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * Instead, the structure of the robot (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-        // Subsystems
-        
-        private final Drive drive;
+    // Subsystems
 
-          // Jay was here and basiclly is the reason that this code works <3
-        
-        private final Vision vision;
-        private final Intake intake;
+    private final Drive drive;
+
+    // Jay was here and basiclly is the reason that this code works <3
+
+    private final Vision vision;
+    private final Intake intake;
 
     private SwerveDriveSimulation driveSimulation = null;
 
