@@ -28,8 +28,6 @@ public interface RollerIO {
 
     default void updateInputs(IntakeIOInputs inputs) {}
 
-    default void setRollerSpeed(double speed) {}
-
     default void start() {}
 
     default void stop() {}

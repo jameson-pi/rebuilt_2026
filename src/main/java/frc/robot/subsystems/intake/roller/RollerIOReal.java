@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake.roller;
 
-import static edu.wpi.first.units.Units.Volts;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -26,7 +24,6 @@ public class RollerIOReal implements RollerIO {
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
     }
 
-    @Override
     public void setRollerSpeed(double speed) {
         rollerMotor.set(speed);
     }
@@ -49,6 +46,6 @@ public class RollerIOReal implements RollerIO {
     @Override
     public void updateInputs(RollerIO.IntakeIOInputs inputs) {
         inputs.rollerSpeedPercentile = rollerMotor.get();
-        inputs.rollerAppliedVolts = Volts.of(rollerMotor.getMotorVoltage().getValueAsDouble());
+        inputs.rollerAppliedVolts = rollerMotor.getMotorVoltage().getValue();
     }
 }

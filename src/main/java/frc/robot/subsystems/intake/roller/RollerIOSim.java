@@ -37,7 +37,6 @@ public class RollerIOSim implements RollerIO {
                 "Fuel", driveSim, Inches.of(24), Inches.of(10), IntakeSimulation.IntakeSide.FRONT, 99);
     }
 
-    @Override
     public void setRollerSpeed(double speed) {
         rollerMotor.set(speed);
     }

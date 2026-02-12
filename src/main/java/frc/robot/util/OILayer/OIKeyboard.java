@@ -10,7 +10,7 @@ public class OIKeyboard implements OI {
     private static final XboxController controller = new XboxController(0);
 
     // *** Keyboard 0 Mappings ***
-    // Axies
+    // Axes
     public static final DoubleSupplier AxisAD = () -> controller.getRawAxis(0);
     public static final DoubleSupplier AxisWS = () -> controller.getRawAxis(1);
     public static final DoubleSupplier AxisRE = () -> controller.getRawAxis(2);

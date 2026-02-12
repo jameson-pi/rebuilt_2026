@@ -54,7 +54,6 @@ public class ExtenderIOReal implements ExtenderIO {
         extenderMotor.apply(extenderMotorConfig);
     }
 
-    @Override
     public void setPosition(Angle position) {
         setpoint = position;
         extenderMotor.setControl(new PositionVoltage(position));
@@ -76,26 +75,37 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     @Override
+    public void goToSiftAngleOne() {
+        setPosition(ExtenderConstants.kExtenderSiftAngleOne);
+    }
+
+    @Override
+    public void goToSiftAngleTwo() {
+        setPosition(ExtenderConstants.kExtenderSiftAngleTwo);
+    }
+
+    @Override
     public void toggle() {
         if (Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
                         .in(Degrees))
                 < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
 
-                    extend();
+            extend();
 
-                }else if(Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+        } else if (Math.abs(
+                        (extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
                                 .in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees)){
-                            retract();
-                        }
+                < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
+            retract();
+        }
     }
 
     @Override
     public void updateInputs(ExtenderIOInputs inputs) {
-        inputs.isExtended =
-                Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
+        inputs.isExtended = Math.abs(
+                        (extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
                                 .in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
+                < ExtenderConstants.kExtenderTolerance.in(Degrees);
         inputs.isRetracted =
                 Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
                                 .in(Degrees))

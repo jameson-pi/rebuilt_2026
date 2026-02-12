@@ -58,8 +58,8 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderPID.kI = ExtenderConstants.PIDF.kI;
         extenderPID.kD = ExtenderConstants.PIDF.kD;
 
-        extenderMotor = new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/Extender",
-                extenderPID);
+        extenderMotor =
+                new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/Extender", extenderPID);
 
         extenderMotorConfig = new TalonFXConfiguration();
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
@@ -91,7 +91,6 @@ public class ExtenderIOSim implements ExtenderIO {
         armMechRoot.append(armLigament);
     }
 
-    @Override
     public void setPosition(Angle position) {
         setpoint = position;
         extenderMotor.setControl(new PositionVoltage(position));
@@ -111,6 +110,16 @@ public class ExtenderIOSim implements ExtenderIO {
     @Override
     public void retract() {
         setPosition(ExtenderConstants.kExtenderIntakeAngle);
+    }
+
+    @Override
+    public void goToSiftAngleOne() {
+        setPosition(ExtenderConstants.kExtenderSiftAngleOne);
+    }
+
+    @Override
+    public void goToSiftAngleTwo() {
+        setPosition(ExtenderConstants.kExtenderSiftAngleTwo);
     }
 
     @Override
