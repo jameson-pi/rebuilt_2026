@@ -38,6 +38,7 @@ public class Upgoer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Upgoer", inputs);
         Logger.recordOutput("Upgoer/Setpoint", setpoint);
+        Logger.recordOutput("Upgoer/Running", Math.abs(setpoint.in(RPM)) > 1.0);
     }
 
     /** Set the feeder velocity. */

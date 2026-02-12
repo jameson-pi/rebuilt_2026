@@ -57,6 +57,6 @@ public class ShooterConstants {
     public static final double defaultRpmMultiplier = 1.0;
 
     // Bench Mode Defaults
-    public static final double defaultBenchModeEnabled = 0.0;
+    public static final double defaultBenchModeEnabled = 1;
     public static final double defaultBenchModeDistanceFeet = 10.0;
 }

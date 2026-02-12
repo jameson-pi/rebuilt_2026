@@ -13,26 +13,14 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.DriveCommands;
-import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.vision.*;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIXbox;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -41,22 +29,16 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public class RobotContainer {
     // Subsystems
-    private final Drive drive;
-    private final Vision vision;
     private final Superstructure superstructure;
-    private final RobotState robotState;
-
-    private SwerveDriveSimulation driveSimulation = null;
-
-    private final LoggedNetworkNumber testRpm = new LoggedNetworkNumber("Test/ShooterRPM", -3700.0);
 
     // OI Layer
     private final OI oi = new OIXbox();
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        robotState = RobotState.create();
+        RobotState.create();
 
+        /*
         switch (Constants.currentMode) {
             case REAL:
                 drive = new Drive(
@@ -95,16 +77,19 @@ public class RobotContainer {
                 vision = new Vision(drive);
                 break;
         }
+        */
 
         superstructure = new Superstructure();
+        /*
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
+        */
 
         // Configure the button bindings
         configureButtonBindings();
 
-        robotState.setPoseSupplier(drive::getPose);
+        // robotState.setPoseSupplier(drive::getPose);
     }
 
     /**
@@ -113,6 +98,7 @@ public class RobotContainer {
      * and then passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+        /*
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
@@ -156,6 +142,15 @@ public class RobotContainer {
                 ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
         oi.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        */
+
+        // Shooter Bring-up / Bench Mode Bindings
+        oi.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
+
+        oi.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
+
+        oi.stopSuperstructure()
+                .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
     }
 
     /**
@@ -163,28 +158,23 @@ public class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    // public Command getAutonomousCommand() {
-    //     return autoChooser.get();
-    // }
+    public Command getAutonomousCommand() {
+        return Commands.none();
+    }
 
-    public void resetSimulationField() {
+    public void resetSimulation() {
+        /*
         if (Constants.currentMode != Constants.Mode.SIM || driveSimulation == null) return;
 
         driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
-        SimulatedArena.getInstance().resetFieldForAuto();
+        */
     }
 
     public void updateSimulation() {
-        if (Constants.currentMode != Constants.Mode.SIM) return;
-
-        SimulatedArena.getInstance().simulationPeriodic();
+        /*
         if (driveSimulation != null) {
             Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
         }
-        Logger.recordOutput(
-                "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-        Logger.recordOutput(
-                "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-        Logger.recordOutput("FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        */
     }
 }

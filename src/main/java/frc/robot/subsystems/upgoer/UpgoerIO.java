@@ -22,9 +22,13 @@ public interface UpgoerIO {
     @AutoLog
     public static class UpgoerIOInputs {
         public AngularVelocity velocity = RPM.of(0.0);
+        public AngularAcceleration acceleration = RotationsPerSecondPerSecond.of(0.0);
         public Voltage appliedVoltage = Volts.of(0.0);
-        public Current current = Amps.of(0.0);
+        public Current statorCurrent = Amps.of(0.0);
+        public Current supplyCurrent = Amps.of(0.0);
+        public Current torqueCurrent = Amps.of(0.0);
         public Temperature temp = Celsius.of(0.0);
+        public AngularVelocity velocityError = RPM.of(0.0);
     }
 
     /** Updates the set of loggable inputs. */

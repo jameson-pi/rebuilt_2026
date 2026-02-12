@@ -70,8 +70,10 @@ public class UpgoerIOSim implements UpgoerIO {
 
         inputs.velocity = RPM.of(sim.getAngularVelocityRPM());
         inputs.appliedVoltage = Volts.of(appliedVolts);
-        inputs.current = Amps.of(sim.getCurrentDrawAmps());
+        inputs.statorCurrent = Amps.of(sim.getCurrentDrawAmps());
+        inputs.supplyCurrent = Amps.of(sim.getCurrentDrawAmps());
         inputs.temp = Celsius.of(motorTempCelsius);
+        inputs.velocityError = RPM.of(setpointRPM - sim.getAngularVelocityRPM());
     }
 
     @Override

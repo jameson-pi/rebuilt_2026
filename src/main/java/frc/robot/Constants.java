@@ -62,7 +62,7 @@ public final class Constants {
 
     public static final class EnabledSubsystems {
         public static final boolean kShooterLeft = true;
-        public static final boolean kShooterRight = true;
+        public static final boolean kShooterRight = false;
         public static final boolean kHood = false;
         public static final boolean kUpgoer = true;
     }
@@ -83,6 +83,6 @@ public final class Constants {
         public static final int kShooterHoodMotorCANID = 23;
         public static final int kShooterSpinMotorLeftCANID = 10;
         public static final int kShooterSpinMotorRightCANID = 25;
-        public static final int kUpgoerMotorCANID = 28;
+        public static final int kUpgoerMotorCANID = 10;
     }
 }

@@ -24,6 +24,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -36,9 +37,13 @@ public class UpgoerIOKrakenX60 implements UpgoerIO {
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
 
     private final StatusSignal<AngularVelocity> velocity;
+    private final StatusSignal<AngularAcceleration> acceleration;
     private final StatusSignal<Voltage> appliedVolts;
-    private final StatusSignal<Current> current;
+    private final StatusSignal<Current> statorCurrent;
+    private final StatusSignal<Current> supplyCurrent;
+    private final StatusSignal<Current> torqueCurrent;
     private final StatusSignal<Temperature> temp;
+    private final StatusSignal<Double> velocityError;
 
     public UpgoerIOKrakenX60() {
         motor = new TunableTalonFX(
@@ -61,23 +66,32 @@ public class UpgoerIOKrakenX60 implements UpgoerIO {
         tryUntilOk(5, () -> motor.applyConfiguration(config, 0.25));
 
         velocity = motor.getVelocity();
+        acceleration = motor.getAcceleration();
         appliedVolts = motor.getMotorVoltage();
-        current = motor.getStatorCurrent();
+        statorCurrent = motor.getStatorCurrent();
+        supplyCurrent = motor.getSupplyCurrent();
+        torqueCurrent = motor.getTorqueCurrent();
         temp = motor.getDeviceTemp();
+        velocityError = motor.getClosedLoopError();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50.0, velocity, appliedVolts, current, temp);
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                50.0, velocity, acceleration, appliedVolts, statorCurrent, supplyCurrent, torqueCurrent, temp, velocityError);
         ParentDevice.optimizeBusUtilizationForAll(motor);
     }
 
     @Override
     public void updateInputs(UpgoerIOInputs inputs) {
         motor.updateTunableGains();
-        BaseStatusSignal.refreshAll(velocity, appliedVolts, current, temp);
+        BaseStatusSignal.refreshAll(velocity, acceleration, appliedVolts, statorCurrent, supplyCurrent, torqueCurrent, temp, velocityError);
 
         inputs.velocity = velocity.getValue();
+        inputs.acceleration = acceleration.getValue();
         inputs.appliedVoltage = appliedVolts.getValue();
-        inputs.current = current.getValue();
+        inputs.statorCurrent = statorCurrent.getValue();
+        inputs.supplyCurrent = supplyCurrent.getValue();
+        inputs.torqueCurrent = torqueCurrent.getValue();
         inputs.temp = temp.getValue();
+        inputs.velocityError = RotationsPerSecond.of(velocityError.getValue());
     }
 
     @Override

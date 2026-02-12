@@ -26,15 +26,15 @@ public class UpgoerConstants {
     public static final boolean enabled = Constants.EnabledSubsystems.kUpgoer;
 
     // Default PID constants for velocity control
-    public static final double defaultKP = 0.1;
+    public static final double defaultKP = 1;
     public static final double defaultKI = 0.0;
     public static final double defaultKD = 0.0;
     public static final double defaultKV = 0.0;
     public static final double defaultKS = 0.0;
 
     // Current limit
-    public static final Current currentLimit = Amps.of(40.0);
+    public static final Current currentLimit = Amps.of(60.0);
 
     // Default feed velocity
-    public static final AngularVelocity defaultFeedVelocity = RPM.of(2500.0);
+    public static final AngularVelocity defaultFeedVelocity = RPM.of(4500.0);
 }
