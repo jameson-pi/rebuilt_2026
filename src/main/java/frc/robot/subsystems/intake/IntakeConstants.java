@@ -4,13 +4,24 @@ import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularMomentum;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Velocity;
 
 public class IntakeConstants {
     public static class RollerConstants {
         // TODO: Fix incorrect Constants
-        public static final double kIntakeSpeed = 0.5;
-        public static final double kOuttakeSpeed = -0.5;
+        public static final double kIntakePercent = 0.5;
+        public static final double kOuttakePercent = 0.5;
+        public static final AngularVelocity kIntakeSpeed = RotationsPerSecond.of(50);
+        public static final AngularVelocity kOuttakeSpeed = RotationsPerSecond.of(50);
+
+        public class PIDF {
+            public static final double kP = 0.0;
+            public static final double kI = 0.0;
+            public static final double kD = 0.0;
+            public static final double kF = 0.0;
+        }
     }
 
     public static class ExtenderConstants {

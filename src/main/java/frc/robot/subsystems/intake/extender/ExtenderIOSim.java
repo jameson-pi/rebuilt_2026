@@ -59,7 +59,7 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderPID.kD = ExtenderConstants.PIDF.kD;
 
         extenderMotor =
-                new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/Extender", extenderPID);
+                new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/ExtenderPID", extenderPID);
 
         extenderMotorConfig = new TalonFXConfiguration();
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
