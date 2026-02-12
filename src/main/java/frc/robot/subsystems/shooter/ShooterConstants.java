@@ -17,8 +17,15 @@ public class ShooterConstants {
     /** Set to true to enable Shooting on the Fly compensation */
     public static final boolean sotfEnabled = true;
 
+    public enum CalculationMode {
+        PHYSICS,
+        DOU_INTERPOLATION
+    }
+
+    public static final CalculationMode defaultCalculationMode = CalculationMode.PHYSICS;
+
     /** Fixed hood angle to use when hood is disabled (degrees) */
-    public static final Angle fixedHoodAngle = Degrees.of(45.0);
+    public static final Angle fixedHoodAngle = Degrees.of(60);
 
     // ==================== Operational Limits ====================
     public static final AngularVelocity maxFlywheelVelocity = RotationsPerSecond.of(100.0); // 6000 RPM
@@ -46,7 +53,7 @@ public class ShooterConstants {
     public static final AngularVelocity minShootingFlywheelVelocity = RPM.of(1500.0);
     public static final AngularVelocity maxShootingFlywheelVelocity = RPM.of(6000.0);
 
-    public static final LinearAcceleration gravity = MetersPerSecondPerSecond.of(9.81);
+    public static final LinearAcceleration gravity = MetersPerSecondPerSecond.of(11);
 
     // Shot map defaults (tunable via NetworkTables)
     public static final double defaultMaxHeightFeet = 8.0;

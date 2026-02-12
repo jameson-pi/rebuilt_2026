@@ -203,6 +203,8 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
     @Override
     public void setFlywheelVelocity(AngularVelocity velocity) {
         flywheelMotor.setControl(new VelocityVoltage(velocity));
+
+        flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     @Override
