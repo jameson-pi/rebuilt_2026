@@ -76,6 +76,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     private static final double ROBOT_MASS_KG = 74.088;
     private static final double ROBOT_MOI = 6.883;
     private static final double WHEEL_COF = 1.2;
+    private static final double BUMPER_LENGTH = 30.0;
+    private static final double BUMPER_WIDTH = 30.0;
     private static final RobotConfig PP_CONFIG = new RobotConfig(
             ROBOT_MASS_KG,
             ROBOT_MOI,
@@ -91,7 +93,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     public static DriveTrainSimulationConfig createMapleSimConfig() {
         return DriveTrainSimulationConfig.Default()
                 .withRobotMass(Kilograms.of(ROBOT_MASS_KG))
-                .withBumperSize(Inches.of(30), Inches.of(30))
+                .withBumperSize(Inches.of(BUMPER_LENGTH), Inches.of(BUMPER_WIDTH))
                 .withCustomModuleTranslations(getModuleTranslations())
                 .withGyro(COTS.ofPigeon2())
                 .withSwerveModule(new SwerveModuleSimulationConfig(

@@ -26,7 +26,7 @@ public class HoodIOSim implements HoodIO {
     private final SingleJointedArmSim sim;
     private final PIDController controller;
 
-    private Angle setpoint = Degrees.of(35.0);
+    private Angle setpoint = HoodConstants.setpoint;
     private Voltage appliedVoltage = Volts.of(0.0);
 
     public HoodIOSim() {

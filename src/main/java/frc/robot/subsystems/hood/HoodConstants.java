@@ -39,4 +39,5 @@ public class HoodConstants {
     // Operational limits
     public static final Angle minAngle = Degrees.of(20.0);
     public static final Angle maxAngle = Degrees.of(80.0);
+    public static final Angle setpoint = Degrees.of(35.0);
 }
