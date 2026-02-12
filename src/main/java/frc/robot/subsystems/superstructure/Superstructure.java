@@ -382,11 +382,7 @@ public class Superstructure extends SubsystemBase {
     public Command fireCommand() {
         return Commands.run(
                         () -> {
-                            if (atTargetVelocity()) {
-                                upgoer.setVelocity(UpgoerConstants.defaultFeedVelocity);
-                            } else {
-                                upgoer.stop();
-                            }
+                            upgoer.setVelocity(UpgoerConstants.defaultFeedVelocity);
                         },
                         upgoer)
                 .withName("SuperstructureFire");

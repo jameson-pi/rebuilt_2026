@@ -85,12 +85,12 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger fireShooter() {
-        return leftBumper;
+        return rightTriggerAsButton;
     }
 
     @Override
     public Trigger stopSuperstructure() {
-        return leftTriggerAsButton;
+        return b;
     }
 
     @Override
