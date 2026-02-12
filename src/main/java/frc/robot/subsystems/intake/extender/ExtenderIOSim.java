@@ -68,7 +68,7 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        extenderMotor.apply(extenderMotorConfig);
+        extenderMotor.applyConfiguration(extenderMotorConfig);
 
         extenderMotorSim = extenderMotor.getSimState();
         extenderEncoderSim = extenderEncoder.getSimState();

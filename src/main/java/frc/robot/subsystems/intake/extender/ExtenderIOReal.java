@@ -51,7 +51,7 @@ public class ExtenderIOReal implements ExtenderIO {
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
-        extenderMotor.apply(extenderMotorConfig);
+        extenderMotor.applyConfiguration(extenderMotorConfig);
     }
 
     public void setPosition(Angle position) {
