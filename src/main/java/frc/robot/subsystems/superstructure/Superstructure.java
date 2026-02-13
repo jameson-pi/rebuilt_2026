@@ -369,7 +369,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command autoSpeedShooter(Supplier<Pose2d> poseSupplier) {
-        return autoSpeedShooter(poseSupplier, () -> new ChassisSpeeds());
+        return autoSpeedShooter(poseSupplier, ChassisSpeeds::new);
     }
 
     public Command autoSpeedShooter() {

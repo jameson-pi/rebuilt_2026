@@ -24,7 +24,7 @@ public class LeftShooterConstants {
     public static final boolean spinMotorEnabled = false;
 
     // Motor inversion (left side is counter-clockwise positive)
-    public static final InvertedValue flywheelInverted = InvertedValue.Clockwise_Positive;
+    public static final InvertedValue flywheelInverted = InvertedValue.CounterClockwise_Positive;
     public static final InvertedValue spinInverted = InvertedValue.CounterClockwise_Positive;
 
     // Ramp rates
@@ -41,8 +41,8 @@ public class LeftShooterConstants {
     public static final double flywheelKS = 0.0;
 
     // Flywheel current limits
-    public static final Current flywheelCurrentLimitStator = Amps.of(60.0);
-    public static final Current flywheelCurrentLimitSupply = Amps.of(40.0);
+    public static final Current flywheelCurrentLimitStator = Amps.of(70);
+    public static final Current flywheelCurrentLimitSupply = Amps.of(50);
     public static final boolean flywheelCurrentLimitStatorEnable = true;
     public static final boolean flywheelCurrentLimitSupplyEnable = true;
 
