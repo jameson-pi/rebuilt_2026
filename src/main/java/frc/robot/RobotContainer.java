@@ -46,12 +46,11 @@ public class RobotContainer {
     private final OI oi = new OIXbox();
 
     // Dashboard Inputs
-    private final LoggedDashboardChooser<Command> autoChooser;
+    private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         RobotState.create();
-
         /*
         switch (Constants.currentMode) {
             case REAL:
@@ -115,7 +114,7 @@ public class RobotContainer {
         // Configure the button bindings
         configureButtonBindings();
 
-        // robotState.setPoseSupplier(drive::getPose);
+        // robotState.setPoseSupplier(drive::getPose); */
     }
 
     /**
