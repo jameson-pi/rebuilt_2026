@@ -68,6 +68,8 @@ public class Superstructure extends SubsystemBase {
             new LoggedNetworkNumber("Shooting/HoodAngleOffset", ShooterConstants.defaultHoodAngleOffset);
     private static final LoggedNetworkNumber rpmMultiplier =
             new LoggedNetworkNumber("Shooting/RPMMultiplier", ShooterConstants.defaultRpmMultiplier);
+    private static final LoggedNetworkNumber calculationMode =
+            new LoggedNetworkNumber("Shooting/CalculationMode", ShooterConstants.defaultCalculationMode.ordinal());
 
     // Testing / Bench Mode
     private static final LoggedNetworkNumber benchModeEnabled =
@@ -333,6 +335,7 @@ public class Superstructure extends SubsystemBase {
 
                             if (inZone) {
                                 TrajectoryBall.ShootingParameters params = TrajectoryBall.calculate(
+                                        ShooterConstants.CalculationMode.values()[(int) calculationMode.get()],
                                         hasHood(),
                                         robotPose,
                                         speeds,

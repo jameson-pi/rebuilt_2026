@@ -36,5 +36,5 @@ public class UpgoerConstants {
     public static final Current currentLimit = Amps.of(60.0);
 
     // Default feed velocity
-    public static final AngularVelocity defaultFeedVelocity = RPM.of(4500.0);
+    public static final AngularVelocity defaultFeedVelocity = RPM.of(-4500.0);
 }

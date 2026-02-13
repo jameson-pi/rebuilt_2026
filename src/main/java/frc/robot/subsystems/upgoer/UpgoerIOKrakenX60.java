@@ -75,14 +75,23 @@ public class UpgoerIOKrakenX60 implements UpgoerIO {
         velocityError = motor.getClosedLoopError();
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0, velocity, acceleration, appliedVolts, statorCurrent, supplyCurrent, torqueCurrent, temp, velocityError);
+                50.0,
+                velocity,
+                acceleration,
+                appliedVolts,
+                statorCurrent,
+                supplyCurrent,
+                torqueCurrent,
+                temp,
+                velocityError);
         ParentDevice.optimizeBusUtilizationForAll(motor);
     }
 
     @Override
     public void updateInputs(UpgoerIOInputs inputs) {
         motor.updateTunableGains();
-        BaseStatusSignal.refreshAll(velocity, acceleration, appliedVolts, statorCurrent, supplyCurrent, torqueCurrent, temp, velocityError);
+        BaseStatusSignal.refreshAll(
+                velocity, acceleration, appliedVolts, statorCurrent, supplyCurrent, torqueCurrent, temp, velocityError);
 
         inputs.velocity = velocity.getValue();
         inputs.acceleration = acceleration.getValue();
