@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants.FieldConstants;
@@ -85,18 +86,28 @@ public class TrajectoryBall {
 
         // Field-relative robot velocity
         Rotation2d heading = robotPose.getRotation();
-        double fieldVx =
-                robotSpeeds.vxMetersPerSecond * heading.getCos() - robotSpeeds.vyMetersPerSecond * heading.getSin();
-        double fieldVy =
-                robotSpeeds.vxMetersPerSecond * heading.getSin() + robotSpeeds.vyMetersPerSecond * heading.getCos();
+        double fieldVx;
+        double fieldVy;
+        if (robotSpeeds == null) {
+            // Treat null robotSpeeds as zero velocity to avoid null pointer dereference
+            fieldVx = 0.0;
+            fieldVy = 0.0;
+        } else {
+            fieldVx =
+                    robotSpeeds.vxMetersPerSecond * heading.getCos()
+                            - robotSpeeds.vyMetersPerSecond * heading.getSin();
+            fieldVy =
+                    robotSpeeds.vxMetersPerSecond * heading.getSin()
+                            + robotSpeeds.vyMetersPerSecond * heading.getCos();
+        }
 
         if (mode == CalculationMode.DOU_INTERPOLATION) {
             // key 1: distance, key 2: radial velocity (positive = moving towards)
             double radialVelocity = fieldVx * staticAngle.getCos() + fieldVy * staticAngle.getSin();
             double rpm =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, distanceKeys, radialSpeedKeys, rpmGrid);
+                    interpolate2d(staticDistance.in(Meters), radialVelocity, rpmGrid);
             double hood =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, distanceKeys, radialSpeedKeys, hoodGrid);
+                    interpolate2d(staticDistance.in(Meters), radialVelocity, hoodGrid);
 
             // Calculation for shot heading (same as physics mode for now)
             // But if we are moving, we need to lead the shot.
@@ -184,8 +195,13 @@ public class TrajectoryBall {
         double gravity = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
         double deltaH = targetHeight.minus(ShooterConstants.shooterHeight).in(Meters);
 
-        // v = sqrt( (g * d^2) / (2 * cos^2(theta) * (d * tan(theta) - deltaH)) )
         double cosTheta = Math.cos(theta);
+
+        // Safety check for vertical or near-vertical shots to avoid division by zero
+        if (Math.abs(cosTheta) < 1e-6) {
+            return new TrajectoryResult(fixedAngle, MetersPerSecond.of(0.0), 1.0);
+        }
+
         double denominator = 2 * cosTheta * cosTheta * (d * Math.tan(theta) - deltaH);
 
         if (denominator <= 0) {
@@ -193,13 +209,17 @@ public class TrajectoryBall {
         }
 
         double launchSpeedMps = Math.sqrt((gravity * d * d) / denominator);
+
+        // Optional: Add a multiplier for real-world drag (e.g., 1.05 for 5% boost)
+        launchSpeedMps *= ShooterConstants.kDragCompensation;
+
         double timeOfFlight = d / (launchSpeedMps * cosTheta);
 
         return new TrajectoryResult(fixedAngle, MetersPerSecond.of(launchSpeedMps), timeOfFlight);
     }
 
     private static ShootingParameters finalizeParameters(
-            Angle launchAngle, LinearVelocity launchSpeed, Rotation2d heading, double hoodOffset, double rpmMult) {
+            Angle launchAngle, LinearVelocity launchSpeed, Rotation2d heading, double hoodOffset, double rpmMulti) {
         // Apply offsets and clamps
         double hoodDegrees = launchAngle.in(Degrees) + hoodOffset;
         hoodDegrees = Math.max(
@@ -209,7 +229,7 @@ public class TrajectoryBall {
         double flywheelRadiusMeters = ShooterConstants.flywheelRadius.in(Meters);
         double angularVelRadPerSec =
                 (launchSpeed.in(MetersPerSecond) / ShooterConstants.launchEfficiency) / flywheelRadiusMeters;
-        double rpm = RadiansPerSecond.of(angularVelRadPerSec).in(RPM) * rpmMult;
+        double rpm = RadiansPerSecond.of(angularVelRadPerSec).in(RPM) * rpmMulti;
 
         rpm = Math.max(
                 ShooterConstants.minShootingFlywheelVelocity.in(RPM),
@@ -218,54 +238,15 @@ public class TrajectoryBall {
         return new ShootingParameters(Degrees.of(hoodDegrees), RPM.of(rpm), heading);
     }
 
-    private static double interpolate2d(
-            double x, double y, double[] xKeys, double[] yKeys, LoggedNetworkNumber[][] grid) {
-        // Bilinear interpolation
-        int x0 = 0, x1 = 0;
-        if (x <= xKeys[0]) {
-            x0 = 0;
-            x1 = 0;
-        } else if (x >= xKeys[xKeys.length - 1]) {
-            x0 = xKeys.length - 1;
-            x1 = xKeys.length - 1;
-        } else {
-            for (int i = 0; i < xKeys.length - 1; i++) {
-                if (x >= xKeys[i] && x <= xKeys[i + 1]) {
-                    x0 = i;
-                    x1 = i + 1;
-                    break;
-                }
+    private static double interpolate2d(double x, double y, LoggedNetworkNumber[][] grid) {
+        InterpolatingDoubleTreeMap xMap = new InterpolatingDoubleTreeMap();
+        for (int i = 0; i < distanceKeys.length; i++) {
+            InterpolatingDoubleTreeMap yMap = new InterpolatingDoubleTreeMap();
+            for (int j = 0; j < radialSpeedKeys.length; j++) {
+                yMap.put(radialSpeedKeys[j], grid[i][j].get());
             }
+            xMap.put(distanceKeys[i], yMap.get(y));
         }
-
-        int y0 = 0, y1 = 0;
-        if (y <= yKeys[0]) {
-            y0 = 0;
-            y1 = 0;
-        } else if (y >= yKeys[yKeys.length - 1]) {
-            y0 = yKeys.length - 1;
-            y1 = yKeys.length - 1;
-        } else {
-            for (int j = 0; j < yKeys.length - 1; j++) {
-                if (y >= yKeys[j] && y <= yKeys[j + 1]) {
-                    y0 = j;
-                    y1 = j + 1;
-                    break;
-                }
-            }
-        }
-
-        double vx0y0 = grid[x0][y0].get();
-        double vx1y0 = grid[x1][y0].get();
-        double vx0y1 = grid[x0][y1].get();
-        double vx1y1 = grid[x1][y1].get();
-
-        double xFraction = (x1 == x0) ? 0 : (x - xKeys[x0]) / (xKeys[x1] - xKeys[x0]);
-        double yFraction = (y1 == y0) ? 0 : (y - yKeys[y0]) / (yKeys[y1] - yKeys[y0]);
-
-        double vLowY = vx0y0 + xFraction * (vx1y0 - vx0y0);
-        double vHighY = vx0y1 + xFraction * (vx1y1 - vx0y1);
-
-        return vLowY + yFraction * (vHighY - vLowY);
+        return xMap.get(x);
     }
 }

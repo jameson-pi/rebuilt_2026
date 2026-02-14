@@ -373,7 +373,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command autoSpeedShooter() {
-        return autoSpeedShooter(() -> new Pose2d(), () -> new ChassisSpeeds());
+        return autoSpeedShooter(Pose2d::new, ChassisSpeeds::new);
     }
     /** Command that aims the robot at the hub while driving. */
     public Command aimAtHubWhileDriving(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {

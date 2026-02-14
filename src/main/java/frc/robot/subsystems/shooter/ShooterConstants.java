@@ -55,13 +55,14 @@ public class ShooterConstants {
 
     public static final LinearAcceleration gravity = MetersPerSecondPerSecond.of(11);
 
+
     // Shot map defaults (tunable via NetworkTables)
     public static final double defaultMaxHeightFeet = 8.0;
     public static final double defaultTargetHeightFeet = 6.0;
 
     // Fine-tuning defaults
     public static final double defaultHoodAngleOffset = 0.0;
-    public static final double defaultRpmMultiplier = 1.0;
+    public static final double defaultRpmMultiplier = 1.3;
 
     // Bench Mode Defaults
     public static final double defaultBenchModeEnabled = 1;
