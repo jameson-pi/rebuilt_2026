@@ -89,4 +89,21 @@ public class OIKeyboard implements OI {
     public Trigger stopIntake() {
         return Slash;
     }
+
+
+    //TODO:TEMPORARY:::PLEASE REMOVE
+    @Override
+    public Trigger extendIntake(){
+        return PgUp;
+    }
+
+    @Override
+    public Trigger retractIntake() {
+        return PgDown;
+    }
+
+    @Override
+    public Trigger zeroIntake() {
+        return Home;
+    }
 }

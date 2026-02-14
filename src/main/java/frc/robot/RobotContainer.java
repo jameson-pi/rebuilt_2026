@@ -181,7 +181,11 @@ public class RobotContainer {
 
         OI.intake().whileTrue(intake.intakeRollerCommand());
         OI.outtake().whileTrue(intake.outtakeRollerCommand());
-        OI.toggleIntakeState().onTrue(intake.toggleIntake());
+        OI.extendIntake().onTrue(intake.extendIntake());
+        OI.retractIntake().onTrue(intake.stowIntake());
+        
+
+        // OI.toggleIntakeState().onTrue(intake.toggleIntake());
 
         // Example Coral Placement Code
         // TODO: delete these code for your own project
