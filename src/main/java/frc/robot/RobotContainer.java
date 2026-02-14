@@ -176,8 +176,7 @@ public class RobotContainer {
                 // actual robot pose
                 // during
                 // simulation
-                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero
-        // gyro
+                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
         OI.intake().whileTrue(intake.intakeRollerCommand());

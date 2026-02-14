@@ -5,10 +5,17 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularMomentum;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.Velocity;
+import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 
 public class IntakeConstants {
+
+    public static final Distance kIntakeWidth = Inches.of(24);
+    public static final Distance kIntakeExtension = Inches.of(10);
+    public static final IntakeSide kIntakeSide = IntakeSide.FRONT;
+    public static final int kIntakeCapacity = 50;
+
     public static class RollerConstants {
         // TODO: Fix incorrect Constants
         public static final double kIntakePercent = 0.5;
@@ -16,11 +23,20 @@ public class IntakeConstants {
         public static final AngularVelocity kIntakeSpeed = RotationsPerSecond.of(50);
         public static final AngularVelocity kOuttakeSpeed = RotationsPerSecond.of(50);
 
-        public class PIDF {
+        public static class PIDF {
             public static final double kP = 0.0;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
-            public static final double kF = 0.0;
+            public static final double kS = 0.0;
+            public static final double kV = 0.0;
+            public static final double kA = 0.0;
+        }
+
+        public class MotorConfig {
+            public static final double kRampPeriod = 0.02;
+            public static final double kPeakForwardTorque = 40;
+            public static final double kPeakReverseTorque = -40;
+            public static final Current kStatorCurrentLimit = Amps.of(40);
         }
     }
 
@@ -38,11 +54,20 @@ public class IntakeConstants {
         public static final Angle kExtenderSiftAngleOne = Degrees.of(13);
         public static final Angle kExtenderSiftAngleTwo = Degrees.of(25);
 
-        public class PIDF {
+        public static class PIDF {
             public static final double kP = 0.0;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
-            public static final double kF = 0.0;
+            public static final double kS = 0.0;
+            public static final double kV = 0.0;
+            public static final double kA = 0.0;
+        }
+
+        public class MotorConfig {
+            public static final double kRampPeriod = 0.02;
+            public static final double kPeakForwardTorque = 40;
+            public static final double kPeakReverseTorque = -40;
+            public static final Current kStatorCurrentLimit = Amps.of(40);
         }
     }
 }

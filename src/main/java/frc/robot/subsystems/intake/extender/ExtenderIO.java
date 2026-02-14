@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ExtenderIO {
@@ -27,6 +28,14 @@ public interface ExtenderIO {
     default void goToSiftAngleOne() {}
 
     default void goToSiftAngleTwo() {}
+
+    default BooleanSupplier isExtended() {
+        return () -> false;
+    }
+
+    default BooleanSupplier atTarget() {
+        return () -> false;
+    }
 
     default void toggle() {}
 

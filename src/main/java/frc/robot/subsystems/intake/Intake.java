@@ -21,6 +21,10 @@ public class Intake extends SubsystemBase {
         rollerInputs = new RollerIO.IntakeIOInputs();
     }
 
+    public int getIntakedFuel() {
+        return roller.getIntakedFuel();
+    }
+
     // Extender Commands
     public Command extendIntake() {
         return runOnce(() -> extender.extend());
@@ -48,11 +52,13 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeCommand() {
-        return runOnce(() -> extendIntake()).andThen(runEnd(() -> intakeRollerCommand(), () -> stopRollerCommand()));
+        return runOnce(() -> extender.extend())
+                .until(extender.isExtended())
+                .andThen(runEnd(() -> roller.start(), () -> roller.stop()));
     }
 
     public Command retractIntakeCommand() {
-        return runOnce(() -> stopRollerCommand()).andThen(runOnce(() -> stowIntake()));
+        return runOnce(() -> roller.stop()).andThen(runOnce(() -> stowIntake()));
     }
 
     public Command goToSiftAngleOneCommand() {
@@ -64,12 +70,14 @@ public class Intake extends SubsystemBase {
     }
 
     public Command outtakeCommand() {
-        return runOnce(() -> extendIntake()).andThen(runEnd(() -> outtakeRollerCommand(), () -> stopRollerCommand()));
+        return runOnce(() -> extender.extend()).andThen(runEnd(() -> roller.outtake(), () -> roller.stop()));
     }
 
     public Command siftFuelCommand() {
-        return run(() -> Commands.repeatingSequence(goToSiftAngleOneCommand(), goToSiftAngleTwoCommand()))
-                .andThen(extendIntake());
+        return run(() -> Commands.repeatingSequence(
+                        runOnce(() -> extender.goToSiftAngleOne()).until(extender.atTarget()),
+                        runOnce(() -> extender.goToSiftAngleTwo()).until(extender.atTarget())))
+                .andThen(() -> extender.extend());
     }
 
     @Override

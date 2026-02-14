@@ -36,4 +36,8 @@ public interface RollerIO {
     default void stop() {}
 
     default void outtake() {}
+
+    default int getIntakedFuel() {
+        return 0;
+    }
 }

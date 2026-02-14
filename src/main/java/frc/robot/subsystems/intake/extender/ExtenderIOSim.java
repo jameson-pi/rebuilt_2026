@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake.extender;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.KilogramMetersSquaredPerSecond;
 import static edu.wpi.first.units.Units.Meters;
@@ -7,6 +8,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -18,10 +20,12 @@ import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.IntakeConstants.ExtenderConstants;
 import frc.robot.util.TunableTalonFX;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -40,6 +44,7 @@ public class ExtenderIOSim implements ExtenderIO {
     private final LoggedMechanismRoot2d armMechRoot;
     private final LoggedMechanismLigament2d armLigament;
     private final LoggedMechanismLigament2d setpointArmLigament;
+    private final CurrentLimitsConfigs currentConfig;
     private final SingleJointedArmSim armSim;
     private Angle setpoint;
 
@@ -58,17 +63,22 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderPID.kI = ExtenderConstants.PIDF.kI;
         extenderPID.kD = ExtenderConstants.PIDF.kD;
 
-        extenderMotor =
-                new TunableTalonFX(Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/ExtenderPID", extenderPID);
+        extenderMotor = new TunableTalonFX(
+                Constants.CANIDs.MotorIDs.kExtenderMotorID, "rio", "Intake/ExtenderPID", extenderPID);
+
+        currentConfig = new CurrentLimitsConfigs();
+        currentConfig.StatorCurrentLimitEnable = true;
+        currentConfig.StatorCurrentLimit = ExtenderConstants.MotorConfig.kStatorCurrentLimit.in(Amps);
 
         extenderMotorConfig = new TalonFXConfiguration();
-        extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
-        extenderMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
-        extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+        extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ExtenderConstants.MotorConfig.kRampPeriod;
+        extenderMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = ExtenderConstants.MotorConfig.kPeakForwardTorque;
+        extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = ExtenderConstants.MotorConfig.kPeakReverseTorque;
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         extenderMotor.applyConfiguration(extenderMotorConfig);
+        extenderMotor.getConfigurator().apply(currentConfig);
 
         extenderMotorSim = extenderMotor.getSimState();
         extenderEncoderSim = extenderEncoder.getSimState();
@@ -113,6 +123,21 @@ public class ExtenderIOSim implements ExtenderIO {
     }
 
     @Override
+    public BooleanSupplier isExtended() {
+        return () -> armSim.hasHitUpperLimit();
+    }
+
+    @Override
+    public BooleanSupplier atTarget() {
+        return () -> Math.abs(extenderEncoder
+                        .getAbsolutePosition()
+                        .getValue()
+                        .minus(setpoint)
+                        .in(Degrees))
+                < ExtenderConstants.kExtenderTolerance.in(Degrees);
+    }
+
+    @Override
     public void goToSiftAngleOne() {
         setPosition(ExtenderConstants.kExtenderSiftAngleOne);
     }
@@ -143,7 +168,7 @@ public class ExtenderIOSim implements ExtenderIO {
     @Override
     public void periodic() {
         armSim.setInputVoltage(extenderMotorSim.getMotorVoltage());
-        armSim.update(0.02);
+        armSim.update(TimedRobot.kDefaultPeriod);
         extenderEncoderSim.setRawPosition(armSim.getAngleRads());
 
         armLigament.setAngle(extenderEncoder.getAbsolutePosition().getValue());

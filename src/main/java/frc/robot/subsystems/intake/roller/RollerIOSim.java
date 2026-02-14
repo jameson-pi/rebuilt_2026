@@ -1,7 +1,9 @@
 package frc.robot.subsystems.intake.roller;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -21,17 +23,23 @@ public class RollerIOSim implements RollerIO {
     private final TalonFXConfiguration rollerMotorConfig;
     private final TalonFXSimState intakeMotorSim;
     private final IntakeSimulation intakeSim;
+    private final CurrentLimitsConfigs currentConfig;
 
     public RollerIOSim(AbstractDriveTrainSimulation driveSim) {
+        currentConfig = new CurrentLimitsConfigs();
+        currentConfig.StatorCurrentLimitEnable = true;
+        currentConfig.StatorCurrentLimit = RollerConstants.MotorConfig.kStatorCurrentLimit.in(Amps);
+
         rollerMotorConfig = new TalonFXConfiguration();
-        rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
-        rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
-        rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+        rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = RollerConstants.MotorConfig.kRampPeriod;
+        rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = RollerConstants.MotorConfig.kPeakForwardTorque;
+        rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = RollerConstants.MotorConfig.kPeakReverseTorque;
         rollerMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         rollerMotor = new TalonFX(Constants.CANIDs.MotorIDs.kRollerMotorID);
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
+        rollerMotor.getConfigurator().apply(currentConfig);
         intakeMotorSim = rollerMotor.getSimState();
         intakeMotorSim.setMotorType(MotorType.KrakenX60);
         intakeSim = IntakeSimulation.OverTheBumperIntake(
@@ -57,6 +65,11 @@ public class RollerIOSim implements RollerIO {
     public void outtake() {
         setRollerSpeed(RollerConstants.kOuttakePercent);
         intakeSim.removeObtainedGamePieces(SimulatedArena.getInstance());
+    }
+
+    @Override
+    public int getIntakedFuel() {
+        return intakeSim.getGamePiecesAmount();
     }
 
     @Override

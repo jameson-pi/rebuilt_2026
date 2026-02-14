@@ -31,7 +31,7 @@ public final class Constants {
         SIM,
     }
 
-    public class CANIDs {
+    public static class CANIDs {
         public static class MotorIDs {
             // TODO: Fix incorrect Constants
             public static final int kRollerMotorID = 14;

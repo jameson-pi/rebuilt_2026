@@ -1,27 +1,37 @@
 package frc.robot.subsystems.intake.roller;
 
+import static edu.wpi.first.units.Units.Amps;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
 
 public class RollerIOReal implements RollerIO {
 
     private final TalonFX rollerMotor;
     private final TalonFXConfiguration rollerMotorConfig;
+    private final CurrentLimitsConfigs currentConfig;
 
     public RollerIOReal() {
+        currentConfig = new CurrentLimitsConfigs();
+        currentConfig.StatorCurrentLimitEnable = true;
+        currentConfig.StatorCurrentLimit = RollerConstants.MotorConfig.kStatorCurrentLimit.in(Amps);
+
         rollerMotorConfig = new TalonFXConfiguration();
-        rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.02;
-        rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
-        rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+        rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = RollerConstants.MotorConfig.kRampPeriod;
+        rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = RollerConstants.MotorConfig.kPeakForwardTorque;
+        rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = RollerConstants.MotorConfig.kPeakReverseTorque;
         rollerMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         rollerMotor = new TalonFX(Constants.CANIDs.MotorIDs.kRollerMotorID);
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
+        rollerMotor.getConfigurator().apply(currentConfig);
     }
 
     public void setRollerSpeed(double speed) {
@@ -41,6 +51,11 @@ public class RollerIOReal implements RollerIO {
     @Override
     public void outtake() {
         setRollerSpeed(IntakeConstants.RollerConstants.kOuttakePercent);
+    }
+
+    @Override
+    public int getIntakedFuel() {
+        return 0;
     }
 
     @Override
