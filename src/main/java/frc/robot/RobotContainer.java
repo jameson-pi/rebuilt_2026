@@ -18,8 +18,14 @@ import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -31,12 +37,18 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.drive.*;
-import frc.robot.subsystems.vision.*;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.GyroIOSim;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
+import frc.robot.subsystems.drive.ModuleIOTalonFXSim;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -125,6 +137,16 @@ public class RobotContainer {
                 "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+            autoChooser.addOption(
+        "Drive SysID Turning (All)",
+        drive
+            .sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward)
+            .andThen(Commands.waitSeconds(0.5))
+            .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse))
+            .andThen(Commands.waitSeconds(0.5))
+            .andThen(drive.sysIdDynamicTurning(SysIdRoutine.Direction.kForward))
+            .andThen(Commands.waitSeconds(0.5))
+            .andThen(drive.sysIdDynamicTurning(SysIdRoutine.Direction.kReverse)));
 
         // Configure the button bindings
         configureButtonBindings();

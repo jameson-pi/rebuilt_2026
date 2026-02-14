@@ -16,6 +16,7 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -108,6 +109,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final SysIdRoutine sysId;
+        private final SysIdRoutine sysIdTurning;
     private final Alert gyroDisconnectedAlert =
             new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -168,6 +170,20 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
                 new SysIdRoutine.Config(
                         null, null, null, (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
                 new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+         sysIdTurning =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> {
+                  SignalLogger.writeString("SwerveTurn/state", state.toString());
+                  Logger.recordOutput("Odometry/SysID Mode/Turn SysID", state.toString());
+                }),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
     }
 
     @Override
@@ -254,6 +270,12 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     public void runCharacterization(double output) {
         for (int i = 0; i < 4; i++) {
             modules[i].runCharacterization(output);
+        }
+    }
+
+    public void runCharacterizationTurning(double output) {
+        for (int i = 0; i < 4; i++) {
+            modules[i].runCharacterizationTurning(output);
         }
     }
 
