@@ -63,7 +63,7 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        setpoint = position;
+        this.setpoint = position;
         extenderMotor.setControl(new PositionVoltage(position));
     }
 

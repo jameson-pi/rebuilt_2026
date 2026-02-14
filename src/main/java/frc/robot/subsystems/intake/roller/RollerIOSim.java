@@ -58,6 +58,7 @@ public class RollerIOSim implements RollerIO {
 
     @Override
     public void stop() {
+        rollerMotor.stopMotor();
         intakeSim.stopIntake();
     }
 
@@ -73,7 +74,7 @@ public class RollerIOSim implements RollerIO {
     }
 
     @Override
-    public void updateInputs(RollerIO.IntakeIOInputs inputs) {
+    public void updateInputs(RollerIO.RollerIOInputs inputs) {
         inputs.rollerSpeedPercentile = intakeMotorSim.getMotorVoltage() / RobotController.getBatteryVoltage();
         inputs.rollerAppliedVolts = intakeMotorSim.getMotorVoltageMeasure();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();

@@ -71,7 +71,7 @@ public class PIDRollerIOReal implements RollerIO {
     }
 
     @Override
-    public void updateInputs(RollerIO.IntakeIOInputs inputs) {
+    public void updateInputs(RollerIO.RollerIOInputs inputs) {
         inputs.rollerSpeedPercentile = rollerMotor.get();
         inputs.rollerAppliedVolts = rollerMotor.getMotorVoltage().getValue();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();

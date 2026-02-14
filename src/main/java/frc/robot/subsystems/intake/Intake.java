@@ -6,19 +6,21 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOInputsAutoLogged;
 import frc.robot.subsystems.intake.roller.RollerIO;
+import frc.robot.subsystems.intake.roller.RollerIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
     private RollerIO roller;
     private ExtenderIO extender;
-    private RollerIO.IntakeIOInputs rollerInputs;
+    private RollerIO.RollerIOInputs rollerInputs;
     private ExtenderIO.ExtenderIOInputs extenderInputs;
     private ExtenderIOInputsAutoLogged extenderInputsAutoLogged;
+    private RollerIOInputsAutoLogged rollerInputsAutoLogged;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
         roller = rollerIO;
         extender = extenderIO;
-        rollerInputs = new RollerIO.IntakeIOInputs();
+        rollerInputs = new RollerIO.RollerIOInputs();
     }
 
     public int getIntakedFuel() {
@@ -58,7 +60,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command retractIntakeCommand() {
-        return runOnce(() -> roller.stop()).andThen(runOnce(() -> stowIntake()));
+        return runOnce(() -> roller.stop()).andThen(runOnce(() -> extender.retract()));
     }
 
     public Command goToSiftAngleOneCommand() {
@@ -86,5 +88,6 @@ public class Intake extends SubsystemBase {
         extender.updateInputs(extenderInputs);
         extender.periodic();
         Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
+        Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
     }
 }

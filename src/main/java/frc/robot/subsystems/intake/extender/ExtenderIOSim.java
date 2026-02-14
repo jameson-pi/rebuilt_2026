@@ -99,10 +99,11 @@ public class ExtenderIOSim implements ExtenderIO {
         armLigament = new LoggedMechanismLigament2d("arm", 2, ExtenderConstants.kExtenderIntakeAngle.in(Degrees));
         setpointArmLigament = new LoggedMechanismLigament2d("setpoint", 2, setpoint.in(Degrees));
         armMechRoot.append(armLigament);
+        armMechRoot.append(setpointArmLigament);
     }
 
     public void setPosition(Angle position) {
-        setpoint = position;
+        this.setpoint = position;
         extenderMotor.setControl(new PositionVoltage(position));
         extenderEncoderSim.setRawPosition(position);
     }
@@ -114,12 +115,12 @@ public class ExtenderIOSim implements ExtenderIO {
 
     @Override
     public void extend() {
-        setPosition(ExtenderConstants.kExtenderStowAngle);
+        setPosition(ExtenderConstants.kExtenderIntakeAngle);
     }
 
     @Override
     public void retract() {
-        setPosition(ExtenderConstants.kExtenderIntakeAngle);
+        setPosition(ExtenderConstants.kExtenderStowAngle);
     }
 
     @Override
@@ -150,9 +151,9 @@ public class ExtenderIOSim implements ExtenderIO {
     @Override
     public void toggle() {
         if (armSim.hasHitUpperLimit()) {
-            extend();
-        } else if (armSim.hasHitLowerLimit()) {
             retract();
+        } else if (armSim.hasHitLowerLimit()) {
+            extend();
         }
     }
 

@@ -32,7 +32,7 @@ public class IntakeConstants {
             public static final double kA = 0.0;
         }
 
-        public class MotorConfig {
+        public static class MotorConfig {
             public static final double kRampPeriod = 0.02;
             public static final double kPeakForwardTorque = 40;
             public static final double kPeakReverseTorque = -40;
@@ -63,7 +63,7 @@ public class IntakeConstants {
             public static final double kA = 0.0;
         }
 
-        public class MotorConfig {
+        public static class MotorConfig {
             public static final double kRampPeriod = 0.02;
             public static final double kPeakForwardTorque = 40;
             public static final double kPeakReverseTorque = -40;

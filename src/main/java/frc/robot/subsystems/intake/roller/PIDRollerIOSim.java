@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake.roller;
 
+import static edu.wpi.first.units.Units.Amps;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -14,9 +16,6 @@ import frc.robot.Constants;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
 import frc.robot.util.TunableTalonFX;
-
-import static edu.wpi.first.units.Units.Amps;
-
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
@@ -29,14 +28,13 @@ public class PIDRollerIOSim implements RollerIO {
     private final IntakeSimulation intakeSim;
     private final Slot0Configs rollerPID;
     private final CurrentLimitsConfigs currentConfig;
-    
 
     public PIDRollerIOSim(AbstractDriveTrainSimulation driveSim) {
 
         currentConfig = new CurrentLimitsConfigs();
         currentConfig.StatorCurrentLimitEnable = true;
         currentConfig.StatorCurrentLimit = RollerConstants.MotorConfig.kStatorCurrentLimit.in(Amps);
-        
+
         rollerMotorConfig = new TalonFXConfiguration();
         rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = RollerConstants.MotorConfig.kRampPeriod;
         rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = RollerConstants.MotorConfig.kPeakForwardTorque;
@@ -93,7 +91,7 @@ public class PIDRollerIOSim implements RollerIO {
     }
 
     @Override
-    public void updateInputs(RollerIO.IntakeIOInputs inputs) {
+    public void updateInputs(RollerIO.RollerIOInputs inputs) {
         inputs.rollerSpeedPercentile = rollerMotorSim.getMotorVoltage() / RobotController.getBatteryVoltage();
         inputs.rollerAppliedVolts = rollerMotorSim.getMotorVoltageMeasure();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
