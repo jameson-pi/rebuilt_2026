@@ -183,7 +183,6 @@ public class RobotContainer {
         OI.outtake().whileTrue(intake.outtakeRollerCommand());
         OI.extendIntake().onTrue(intake.extendIntake());
         OI.retractIntake().onTrue(intake.stowIntake());
-        
 
         // OI.toggleIntakeState().onTrue(intake.toggleIntake());
 

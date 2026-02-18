@@ -53,7 +53,7 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> roller.stop());
     }
 
-    //Combination Commands
+    // Combination Commands
     public Command intakeCommand() {
         return runOnce(() -> extender.extend())
                 .until(extender.isExtended())
@@ -83,7 +83,7 @@ public class Intake extends SubsystemBase {
                 .andThen(() -> extender.extend());
     }
 
-    //Utility Commands
+    // Utility Commands
     public Command zeroExtender() {
         return runOnce(() -> extender.zero());
     }

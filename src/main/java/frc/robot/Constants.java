@@ -34,8 +34,8 @@ public final class Constants {
     public static class CANIDs {
         public static class MotorIDs {
             // TODO: Fix incorrect Constants
-            public static final int kRollerMotorID = 14;
-            public static final int kExtenderMotorID = 2;
+            public static final int kRollerMotorID = 10;
+            public static final int kExtenderMotorID = 9;
         }
 
         public static class SensorIDs {

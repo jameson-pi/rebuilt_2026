@@ -90,10 +90,9 @@ public class OIKeyboard implements OI {
         return Slash;
     }
 
-
-    //TODO:TEMPORARY:::PLEASE REMOVE
+    // TODO:TEMPORARY:::PLEASE REMOVE
     @Override
-    public Trigger extendIntake(){
+    public Trigger extendIntake() {
         return PgUp;
     }
 
