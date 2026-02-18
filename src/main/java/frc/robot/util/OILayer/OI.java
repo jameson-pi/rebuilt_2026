@@ -7,8 +7,8 @@ public interface OI {
     public final Trigger noButton = new Trigger(() -> false);
     public final DoubleSupplier noAxis = () -> 0.0;
 
-    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 3, 0.2, true);
-    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.2, true);
+    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 3, 0.02, false);
+    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.02, true);
 
     default DoubleSupplier driveTranslationX() {
         return noAxis;
