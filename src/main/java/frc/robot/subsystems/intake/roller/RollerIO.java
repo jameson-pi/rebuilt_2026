@@ -40,4 +40,6 @@ public interface RollerIO {
     default int getIntakedFuel() {
         return 0;
     }
+
+    default void periodic() {}
 }

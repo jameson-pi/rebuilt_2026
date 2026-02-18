@@ -76,4 +76,9 @@ public class PIDRollerIOReal implements RollerIO {
         inputs.rollerAppliedVolts = rollerMotor.getMotorVoltage().getValue();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
     }
+
+    @Override
+    public void periodic() {
+        rollerMotor.updateTunableGains();
+    }
 }
