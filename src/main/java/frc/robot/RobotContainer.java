@@ -147,11 +147,11 @@ public class RobotContainer {
         autoChooser.addOption(
                 "Drive SysID Turning (All)",
                 drive.sysIdDynamicTurning(SysIdRoutine.Direction.kForward)
-                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdDynamicTurning(SysIdRoutine.Direction.kReverse))
-                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
-                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse)));
 
         // Configure the button bindings
@@ -169,6 +169,11 @@ public class RobotContainer {
                     SignalLogger.stop();
                 })
                 .withName("Stop Signal Logger"));
+
+        SmartDashboard.putData(Commands.runOnce(() -> {
+                    SignalLogger.start();
+                })
+                .withName("Start Signal Logger"));
 
         // Default command, normal field-relative drive
         drive.setDefaultCommand(

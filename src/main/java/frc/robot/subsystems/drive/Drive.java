@@ -301,11 +301,11 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     }
 
     public Command sysIdQuasistaticTurning(SysIdRoutine.Direction direction) {
-        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.quasistatic(direction));
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(5.0).andThen(sysIdTurning.quasistatic(direction));
     }
 
     public Command sysIdDynamicTurning(SysIdRoutine.Direction direction) {
-        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.dynamic(direction));
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(5.0).andThen(sysIdTurning.dynamic(direction));
     }
 
     /** Returns the module states (turn angles and drive velocities) for all of the modules. */
