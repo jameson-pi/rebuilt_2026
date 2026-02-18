@@ -7,16 +7,12 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
-import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -35,9 +31,6 @@ public class ExtenderIOSim implements ExtenderIO {
 
     private final TalonFXConfiguration extenderMotorConfig;
     private final TunableTalonFX extenderMotor;
-    private final CANcoder extenderEncoder;
-    private final CANcoderConfiguration extenderEncoderConfig;
-    private final CANcoderSimState extenderEncoderSim;
     private final Slot0Configs extenderPID;
     private final TalonFXSimState extenderMotorSim;
     private final LoggedMechanism2d armMech;
@@ -50,13 +43,6 @@ public class ExtenderIOSim implements ExtenderIO {
 
     public ExtenderIOSim() {
         setpoint = Degrees.of(0.0);
-
-        extenderEncoder = new CANcoder(Constants.CANIDs.SensorIDs.kExtenderEncoderID);
-
-        extenderEncoderConfig = new CANcoderConfiguration();
-        extenderEncoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-
-        extenderEncoder.getConfigurator().apply(extenderEncoderConfig);
 
         extenderPID = new Slot0Configs();
         extenderPID.kP = ExtenderConstants.PIDF.kP;
@@ -76,12 +62,12 @@ public class ExtenderIOSim implements ExtenderIO {
         extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = ExtenderConstants.MotorConfig.kPeakReverseTorque;
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        extenderMotorConfig.Feedback.SensorToMechanismRatio = ExtenderConstants.kGearing;
 
         extenderMotor.applyConfiguration(extenderMotorConfig);
         extenderMotor.getConfigurator().apply(currentConfig);
 
         extenderMotorSim = extenderMotor.getSimState();
-        extenderEncoderSim = extenderEncoder.getSimState();
 
         armSim = new SingleJointedArmSim(
                 DCMotor.getKrakenX60(1),
@@ -92,6 +78,7 @@ public class ExtenderIOSim implements ExtenderIO {
                 ExtenderConstants.kExtenderStowAngle.in(Radians),
                 false,
                 ExtenderConstants.kExtenderIntakeAngle.in(Radians),
+                0.0,
                 0.0);
 
         armMech = new LoggedMechanism2d(5, 5);
@@ -105,12 +92,11 @@ public class ExtenderIOSim implements ExtenderIO {
     public void setPosition(Angle position) {
         this.setpoint = position;
         extenderMotor.setControl(new PositionVoltage(position));
-        extenderEncoderSim.setRawPosition(position);
     }
 
     @Override
     public void zero() {
-        extenderEncoder.setPosition(0.0);
+        extenderMotor.setPosition(0.0);
     }
 
     @Override
@@ -130,12 +116,9 @@ public class ExtenderIOSim implements ExtenderIO {
 
     @Override
     public BooleanSupplier atTarget() {
-        return () -> Math.abs(extenderEncoder
-                        .getAbsolutePosition()
-                        .getValue()
-                        .minus(setpoint)
-                        .in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return () ->
+                Math.abs(extenderMotor.getPosition().getValue().minus(setpoint).in(Degrees))
+                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
     }
 
     @Override
@@ -161,7 +144,7 @@ public class ExtenderIOSim implements ExtenderIO {
     public void updateInputs(ExtenderIOInputs inputs) {
         inputs.isExtended = armSim.hasHitUpperLimit();
         inputs.isRetracted = armSim.hasHitLowerLimit();
-        inputs.position = Radians.of(armSim.getAngleRads());
+        inputs.position = extenderMotor.getPosition().getValue();
         inputs.setpoint = setpoint;
         inputs.motorVoltage = Volts.of(extenderMotorSim.getMotorVoltage());
     }
@@ -170,9 +153,9 @@ public class ExtenderIOSim implements ExtenderIO {
     public void periodic() {
         armSim.setInputVoltage(extenderMotorSim.getMotorVoltage());
         armSim.update(TimedRobot.kDefaultPeriod);
-        extenderEncoderSim.setRawPosition(armSim.getAngleRads());
+        extenderMotor.setPosition(Radians.of(armSim.getAngleRads()));
 
-        armLigament.setAngle(extenderEncoder.getAbsolutePosition().getValue());
+        armLigament.setAngle(extenderMotor.getPosition().getValue());
         setpointArmLigament.setAngle(setpoint);
         Logger.recordOutput("Intake/2D-Simulation", armMech);
 

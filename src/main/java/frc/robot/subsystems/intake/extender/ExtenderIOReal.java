@@ -4,15 +4,12 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.IntakeConstants.ExtenderConstants;
@@ -22,22 +19,13 @@ import java.util.function.BooleanSupplier;
 public class ExtenderIOReal implements ExtenderIO {
 
     private final TunableTalonFX extenderMotor;
-    // private final CANcoder extenderEncoder;
-    private final CANcoderConfiguration extenderEncoderConfig;
     private final CurrentLimitsConfigs currentConfig;
     private final TalonFXConfiguration extenderMotorConfig;
     private final Slot0Configs extenderPID;
     private Angle setpoint;
 
     public ExtenderIOReal() {
-        Angle setpoint = Degrees.of(0.0);
-
-        // extenderEncoder = new CANcoder(Constants.CANIDs.SensorIDs.kExtenderEncoderID);
-
-        extenderEncoderConfig = new CANcoderConfiguration();
-        extenderEncoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-
-        // extenderEncoder.getConfigurator().apply(extenderEncoderConfig);
+        this.setpoint = Degrees.of(0.0);
 
         extenderPID = new Slot0Configs();
         extenderPID.kP = ExtenderConstants.PIDF.kP;
@@ -57,6 +45,7 @@ public class ExtenderIOReal implements ExtenderIO {
         extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = ExtenderConstants.MotorConfig.kPeakReverseTorque;
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        extenderMotorConfig.Feedback.SensorToMechanismRatio = ExtenderConstants.kGearing;
 
         extenderMotor.applyConfiguration(extenderMotorConfig);
         extenderMotor.getConfigurator().apply(currentConfig);
@@ -69,7 +58,7 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public void zero() {
-        extenderEncoder.setPosition(0.0);
+        extenderMotor.setPosition(0.0);
     }
 
     @Override
@@ -84,20 +73,16 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public BooleanSupplier isExtended() {
-        return () -> Math.abs(
-                        (extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
-                                .in(Degrees))
+        return () -> Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
+                        .in(Degrees))
                 < ExtenderConstants.kExtenderTolerance.in(Degrees);
     }
 
     @Override
     public BooleanSupplier atTarget() {
-        return () -> Math.abs(extenderEncoder
-                        .getAbsolutePosition()
-                        .getValue()
-                        .minus(setpoint)
-                        .in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return () ->
+                Math.abs(extenderMotor.getPosition().getValue().minus(setpoint).in(Degrees))
+                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
     }
 
     @Override
@@ -112,15 +97,13 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public void toggle() {
-        if (Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
-                        .in(Degrees))
+        if (Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle)).in(Degrees))
                 < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
 
             extend();
 
-        } else if (Math.abs(
-                        (extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
-                                .in(Degrees))
+        } else if (Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+                        .in(Degrees))
                 < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
             retract();
         }
@@ -128,15 +111,15 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public void updateInputs(ExtenderIOInputs inputs) {
-        inputs.isExtended = Math.abs(
-                        (extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
-                                .in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees);
-        inputs.isRetracted =
-                Math.abs((extenderEncoder.getAbsolutePosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+        inputs.isExtended =
+                Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
                                 .in(Degrees))
                         < ExtenderConstants.kExtenderTolerance.in(Degrees);
-        inputs.position = extenderEncoder.getAbsolutePosition().getValue();
+        inputs.isRetracted =
+                Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
+                                .in(Degrees))
+                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        inputs.position = extenderMotor.getPosition().getValue();
         inputs.setpoint = setpoint;
         inputs.motorVoltage = Volts.of(extenderMotor.getMotorVoltage().getValueAsDouble());
     }
