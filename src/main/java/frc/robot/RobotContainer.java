@@ -43,6 +43,9 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.OILayer.OI;
+import frc.robot.util.OILayer.OIKeyboard;
+import frc.robot.util.OILayer.OIXbox;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -62,6 +65,7 @@ public class RobotContainer {
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
+    private final OI oi;
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -122,6 +126,11 @@ public class RobotContainer {
 
                 break;
         }
+        if (Constants.usingKeyboard) {
+            oi = new OIKeyboard();
+        } else {
+            oi = new OIXbox();
+        }
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -162,8 +171,8 @@ public class RobotContainer {
                 .withName("Stop Signal Logger"));
 
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
 
         // Lock to 0° when A button is held
         controller
