@@ -7,20 +7,21 @@ import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOInputsAutoLogged;
 import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOInputsAutoLogged;
-import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
     private RollerIO roller;
     private ExtenderIO extender;
-    private RollerIO.RollerIOInputs rollerInputs;
-    private ExtenderIO.ExtenderIOInputs extenderInputs;
-    private ExtenderIOInputsAutoLogged extenderInputsAutoLogged;
+    // private RollerIO.RollerIOInputs rollerInputs;
+    // private ExtenderIO.ExtenderIOInputs extenderInputs;
+    private RollerIOInputsAutoLogged rollerInputs;
+    private ExtenderIOInputsAutoLogged extenderInputs;
     private RollerIOInputsAutoLogged rollerInputsAutoLogged;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
         roller = rollerIO;
         extender = extenderIO;
-        rollerInputs = new RollerIO.RollerIOInputs();
+        rollerInputs = new RollerIOInputsAutoLogged();
+        extenderInputs = new ExtenderIOInputsAutoLogged();
     }
 
     public int getIntakedFuel() {
@@ -93,7 +94,7 @@ public class Intake extends SubsystemBase {
         roller.updateInputs(rollerInputs);
         extender.updateInputs(extenderInputs);
         extender.periodic();
-        Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
-        Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
+        // Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
+        // Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
     }
 }

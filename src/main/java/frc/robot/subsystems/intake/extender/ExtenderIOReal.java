@@ -22,7 +22,7 @@ import java.util.function.BooleanSupplier;
 public class ExtenderIOReal implements ExtenderIO {
 
     private final TunableTalonFX extenderMotor;
-    private final CANcoder extenderEncoder;
+    // private final CANcoder extenderEncoder;
     private final CANcoderConfiguration extenderEncoderConfig;
     private final CurrentLimitsConfigs currentConfig;
     private final TalonFXConfiguration extenderMotorConfig;
@@ -32,12 +32,12 @@ public class ExtenderIOReal implements ExtenderIO {
     public ExtenderIOReal() {
         Angle setpoint = Degrees.of(0.0);
 
-        extenderEncoder = new CANcoder(Constants.CANIDs.SensorIDs.kExtenderEncoderID);
+        // extenderEncoder = new CANcoder(Constants.CANIDs.SensorIDs.kExtenderEncoderID);
 
         extenderEncoderConfig = new CANcoderConfiguration();
         extenderEncoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
 
-        extenderEncoder.getConfigurator().apply(extenderEncoderConfig);
+        // extenderEncoder.getConfigurator().apply(extenderEncoderConfig);
 
         extenderPID = new Slot0Configs();
         extenderPID.kP = ExtenderConstants.PIDF.kP;

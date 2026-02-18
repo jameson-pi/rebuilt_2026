@@ -16,6 +16,7 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -108,6 +109,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final SysIdRoutine sysId;
+    private final SysIdRoutine sysIdTurning;
     private final Alert gyroDisconnectedAlert =
             new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -167,6 +169,13 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         sysId = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         null, null, null, (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
+                new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+        sysIdTurning = new SysIdRoutine(
+                new SysIdRoutine.Config(null, null, null, (state) -> {
+                    SignalLogger.writeString("SwerveTurn/state", state.toString());
+                    Logger.recordOutput("Odometry/SysID Mode/Turn SysID", state.toString());
+                }),
                 new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
     }
 
@@ -257,6 +266,12 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         }
     }
 
+    public void runCharacterizationTurning(double output) {
+        for (int i = 0; i < 4; i++) {
+            modules[i].runCharacterizationTurning(output);
+        }
+    }
+
     /** Stops the drive. */
     public void stop() {
         runVelocity(new ChassisSpeeds());
@@ -283,6 +298,14 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     /** Returns a command to run a dynamic test in the specified direction. */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
+    }
+
+    public Command sysIdQuasistaticTurning(SysIdRoutine.Direction direction) {
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.quasistatic(direction));
+    }
+
+    public Command sysIdDynamicTurning(SysIdRoutine.Direction direction) {
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.dynamic(direction));
     }
 
     /** Returns the module states (turn angles and drive velocities) for all of the modules. */

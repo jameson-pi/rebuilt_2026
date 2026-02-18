@@ -41,8 +41,6 @@ public final class Constants {
         public static class SensorIDs {
             // TODO: Fix incorrect Constants
             public static final int kPivotEncoderID = 1;
-            public static final int kExtenderLimitSwitchOneID = 0;
-            public static final int kExtenderLimitSwitchTwoID = 1;
             public static final int kExtenderEncoderID = 2;
         }
     }
