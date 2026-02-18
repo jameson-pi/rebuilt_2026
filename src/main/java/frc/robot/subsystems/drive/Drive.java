@@ -300,6 +300,14 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
     }
 
+    public Command sysIdQuasistaticTurning(SysIdRoutine.Direction direction){
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.quasistatic(direction));
+    }
+
+    public Command sysIdDynamicTurning(SysIdRoutine.Direction direction){
+        return run(() -> runCharacterizationTurning(0.0)).withTimeout(1.0).andThen(sysIdTurning.dynamic(direction));
+    }
+
     /** Returns the module states (turn angles and drive velocities) for all of the modules. */
     @AutoLogOutput(key = "SwerveStates/Measured")
     private SwerveModuleState[] getModuleStates() {

@@ -135,15 +135,16 @@ public class RobotContainer {
                 "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        // autoChooser.addOption(
-        //         "Drive SysID Turning (All)",
-        //         drive.runCharacterizationTurning(SysIdRoutine.Direction.kForward)
-        //                 .andThen(Commands.waitSeconds(0.5))
-        //                 .andThen(drive.runCharacterizationTurning(SysIdRoutine.Direction.kReverse))
-        //                 .andThen(Commands.waitSeconds(0.5))
-        //                 .andThen(drive.runCharacterizationTurning(SysIdRoutine.Direction.kForward))
-        //                 .andThen(Commands.waitSeconds(0.5))
-        //                 .andThen(drive.runCharacterizationTurning(SysIdRoutine.Direction.kReverse)));
+        autoChooser.addOption(
+                "Drive SysID Turning (All)",
+                drive
+                        .sysIdDynamicTurning(SysIdRoutine.Direction.kForward)
+                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(drive.sysIdDynamicTurning(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
+                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse)));
 
         // Configure the button bindings
         configureButtonBindings();
