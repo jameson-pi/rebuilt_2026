@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -9,12 +10,14 @@ import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOInputsAutoLogged;
 
 public class Intake extends SubsystemBase {
+    
     private RollerIO roller;
     private ExtenderIO extender;
     // private RollerIO.RollerIOInputs rollerInputs;
     // private ExtenderIO.ExtenderIOInputs extenderInputs;
     private RollerIOInputsAutoLogged rollerInputs;
     private ExtenderIOInputsAutoLogged extenderInputs;
+    private ExtenderIOInputsAutoLogged extenderInputsAutoLogged;
     private RollerIOInputsAutoLogged rollerInputsAutoLogged;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
@@ -94,7 +97,7 @@ public class Intake extends SubsystemBase {
         roller.updateInputs(rollerInputs);
         extender.updateInputs(extenderInputs);
         extender.periodic();
-        // Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
-        // Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
+        Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
+        Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
     }
 }
