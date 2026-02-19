@@ -105,4 +105,14 @@ public class OIKeyboard implements OI {
     public Trigger zeroIntake() {
         return Home;
     }
+
+    @Override
+    public Trigger runRoller() {
+        return Comma;
+    }
+
+    @Override
+    public Trigger stopRoller() {
+        return Insert;
+    }
 }

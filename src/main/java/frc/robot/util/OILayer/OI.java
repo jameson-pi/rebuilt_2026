@@ -82,6 +82,14 @@ public interface OI {
         return noButton;
     }
 
+    default Trigger runRoller() {
+        return noButton;
+    }
+
+    default Trigger stopRoller() {
+        return noButton;
+    }
+
     /* While this button is held, the robot aims for the hub and prevents the driver from updating the rotation
      * Subsystem: Drive - whenever this is held down, set rotation based on position
      */

@@ -27,7 +27,7 @@ public class RollerIOReal implements RollerIO {
         rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = RollerConstants.MotorConfig.kPeakForwardTorque;
         rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = RollerConstants.MotorConfig.kPeakReverseTorque;
         rollerMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         rollerMotor = new TalonFX(Constants.CANIDs.MotorIDs.kRollerMotorID);
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
@@ -63,5 +63,6 @@ public class RollerIOReal implements RollerIO {
         inputs.rollerSpeedPercentile = rollerMotor.get();
         inputs.rollerAppliedVolts = rollerMotor.getMotorVoltage().getValue();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
+        inputs.statorCurrent = rollerMotor.getStatorCurrent().getValue();
     }
 }

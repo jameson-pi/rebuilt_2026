@@ -114,6 +114,16 @@ public class OIXbox implements OI {
     }
 
     @Override
+    public Trigger runRoller() {
+        return y;
+    }
+
+    @Override
+    public Trigger stopIntake() {
+        return a;
+    }
+
+    @Override
     public Trigger toggleIntakeState() {
         return y;
     }
