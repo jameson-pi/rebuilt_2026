@@ -18,11 +18,13 @@ import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -182,32 +184,32 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
 
-        // SmartDashboard.putData(Commands.runOnce(() -> {
-        //             SignalLogger.stop();
-        //         })
-        //         .withName("Stop Signal Logger"));
+        SmartDashboard.putData(Commands.runOnce(() -> {
+                    SignalLogger.stop();
+                })
+                .withName("Stop Signal Logger"));
 
-        // // Default command, normal field-relative drive
-        // drive.setDefaultCommand(
-        //         DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(),
-        // oi.driveRotation()));
-        // // Lock to 0° when A button is held
-        // controller
-        //         .a()
-        //         .whileTrue(DriveCommands.joystickDriveAtAngle(
-        //                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
+        // Default command, normal field-relative drive
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(),
+        oi.driveRotation()));
+        // Lock to 0° when A button is held
+        controller
+                .a()
+                .whileTrue(DriveCommands.joystickDriveAtAngle(
+                        drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
 
-        // // Switch to X pattern when X button is pressed
-        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // Switch to X pattern when X button is pressed
+        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        // // Reset gyro / odometry
-        // final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
-        //         ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // reset odometry to
-        //         // actual robot pose
-        //         // during
-        //         // simulation
-        //         : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-        // controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        // Reset gyro / odometry
+        final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
+                ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // reset odometry to
+                // actual robot pose
+                // during
+                // simulation
+                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
+        controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
         OI.extendIntake().onTrue(intake.extendIntake());
         OI.retractIntake().onTrue(intake.stowIntake());

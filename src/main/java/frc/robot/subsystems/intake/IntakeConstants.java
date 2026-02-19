@@ -46,7 +46,7 @@ public class IntakeConstants {
         public static final AngularMomentum kMOI = KilogramMetersSquaredPerSecond.of(0.5);
         public static final Distance kExtenderArmLength = Inches.of(12.0);
 
-        public static final Angle kExtenderStowAngle = Degrees.of(25.0);
+        public static final Angle kExtenderStowAngle = Rotations.of(2.5);
         public static final Angle kExtenderIntakeAngle = Degrees.of(5.0);
         public static final Angle kExtenderMaxAngle = Degrees.of(45);
         public static final Angle kExtenderMinAngle = Degrees.of(0.0);

@@ -14,7 +14,7 @@ public interface ExtenderIO {
     class ExtenderIOInputs {
         public boolean isExtended = false;
         public boolean isRetracted = false;
-        public Angle position = Degrees.of(0.0);
+        public Angle position = Degrees.zero();
         public Angle setpoint = Degrees.of(0.0);
         public Voltage motorVoltage = Volts.of(0.0);
     }

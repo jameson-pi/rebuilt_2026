@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake.extender;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -43,7 +44,7 @@ public class ExtenderIOReal implements ExtenderIO {
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ExtenderConstants.MotorConfig.kRampPeriod;
         extenderMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = ExtenderConstants.MotorConfig.kPeakForwardTorque;
         extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = ExtenderConstants.MotorConfig.kPeakReverseTorque;
-        extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        extenderMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         extenderMotorConfig.Feedback.SensorToMechanismRatio = ExtenderConstants.kGearing;
 
@@ -120,7 +121,7 @@ public class ExtenderIOReal implements ExtenderIO {
                                 .in(Degrees))
                         < ExtenderConstants.kExtenderTolerance.in(Degrees);
         inputs.position = extenderMotor.getPosition().getValue();
-        inputs.setpoint = setpoint;
+        inputs.setpoint = Degrees.of(setpoint.in(Rotations));
         inputs.motorVoltage = Volts.of(extenderMotor.getMotorVoltage().getValueAsDouble());
     }
 
