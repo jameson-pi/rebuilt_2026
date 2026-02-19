@@ -97,30 +97,9 @@ public class OIXbox implements OI {
         return leftTriggerAsButton;
     }
 
-    // TODO:TEMPORARY:::PLEASE REMOVE
-    @Override
-    public Trigger extendIntake() {
-        return leftBumper;
-    }
-
-    @Override
-    public Trigger retractIntake() {
-        return rightBumper;
-    }
-
     @Override
     public Trigger zeroIntake() {
         return x;
-    }
-
-    @Override
-    public Trigger runRoller() {
-        return y;
-    }
-
-    @Override
-    public Trigger stopIntake() {
-        return a;
     }
 
     @Override

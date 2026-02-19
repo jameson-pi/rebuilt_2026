@@ -95,6 +95,7 @@ public class PIDRollerIOSim implements RollerIO {
         inputs.rollerSpeedPercentile = rollerMotorSim.getMotorVoltage() / RobotController.getBatteryVoltage();
         inputs.rollerAppliedVolts = rollerMotorSim.getMotorVoltageMeasure();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
+        inputs.statorCurrent = rollerMotor.getStatorCurrent().getValue();
     }
 
     @Override

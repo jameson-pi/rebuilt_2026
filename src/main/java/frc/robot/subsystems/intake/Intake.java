@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -11,14 +10,11 @@ import frc.robot.subsystems.intake.roller.RollerIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
-    
-    private RollerIO roller;
-    private ExtenderIO extender;
-    // private RollerIO.RollerIOInputs rollerInputs;
-    // private ExtenderIO.ExtenderIOInputs extenderInputs;
-    private RollerIO.RollerIOInputs rollerInputs;
-    private ExtenderIO.ExtenderIOInputs extenderInputs;
-    private RollerIOInputsAutoLogged rollerInputsAutoLogged;
+
+    private final RollerIO roller;
+    private final ExtenderIO extender;
+    private final RollerIO.RollerIOInputs rollerInputs;
+    private final ExtenderIO.ExtenderIOInputs extenderInputs;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
         roller = rollerIO;
@@ -41,16 +37,19 @@ public class Intake extends SubsystemBase {
     }
 
     public Command toggleIntake() {
+        // return new ConditionalCommand(
+        // runOnce(() -> extender.retract()), runOnce(() -> extender.extend()),
+        // extender.isExtended());
         return runOnce(() -> extender.toggle());
     }
 
     // Roller Commands
     public Command intakeRollerCommand() {
-        return Commands.runEnd(() -> roller.start(), () -> roller.stop());
+        return Commands.runEnd(() -> roller.start(), () -> roller.stop(), this);
     }
 
     public Command outtakeRollerCommand() {
-        return Commands.runEnd(() -> roller.outtake(), () -> roller.stop());
+        return Commands.runEnd(() -> roller.outtake(), () -> roller.stop(), this);
     }
 
     public Command stopRollerCommand() {
@@ -82,8 +81,8 @@ public class Intake extends SubsystemBase {
 
     public Command siftFuelCommand() {
         return run(() -> Commands.repeatingSequence(
-                        runOnce(() -> extender.goToSiftAngleOne()).until(extender.atTarget()),
-                        runOnce(() -> extender.goToSiftAngleTwo()).until(extender.atTarget())))
+                runOnce(() -> extender.goToSiftAngleOne()).until(extender.atTarget()),
+                runOnce(() -> extender.goToSiftAngleTwo()).until(extender.atTarget())))
                 .andThen(() -> extender.extend());
     }
 
@@ -109,9 +108,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/Extender/MotorVoltage", extenderInputs.motorVoltage);
         Logger.recordOutput("Intake/Extender/IsExtended", extenderInputs.isExtended);
         Logger.recordOutput("Intake/Extender/IsRetracted", extenderInputs.isRetracted);
+        Logger.recordOutput("Intake/Extender/atTarget", extenderInputs.atTarget);
 
-        // LoggableInputs extenderInputsAutoLogged;
-        // Logger.processInputs("Intake/Extender", extenderInputsAutoLogged);
-        // Logger.processInputs("Intake/Roller", rollerInputsAutoLogged);
+        Logger.recordOutput(
+                "Intake/CurrentCommand",
+                this.getCurrentCommand() != null ? this.getCurrentCommand().getName() : "None");
     }
 }

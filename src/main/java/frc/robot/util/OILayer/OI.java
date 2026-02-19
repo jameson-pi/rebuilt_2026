@@ -26,9 +26,6 @@ public interface OI {
         return noButton;
     }
 
-    default Trigger stopIntake() {
-        return noButton;
-    }
     /* Puts the shooter into a mode where it is able to shoot (e.g. spins up a flywheel that was currently idle)
      * Rumbles joystick or turns on lights on the robot when it gets up to speed to be able to shoot
      * When button is release, return to an idle speed
@@ -69,24 +66,7 @@ public interface OI {
         return noButton;
     }
 
-    // TODO:TEMPORARY:::PLEASE REMOVE
-    default Trigger extendIntake() {
-        return noButton;
-    }
-
-    default Trigger retractIntake() {
-        return noButton;
-    }
-
     default Trigger zeroIntake() {
-        return noButton;
-    }
-
-    default Trigger runRoller() {
-        return noButton;
-    }
-
-    default Trigger stopRoller() {
         return noButton;
     }
 

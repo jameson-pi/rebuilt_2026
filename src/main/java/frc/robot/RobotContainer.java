@@ -210,11 +210,9 @@ public class RobotContainer {
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
-        OI.extendIntake().onTrue(intake.extendIntake());
-        OI.retractIntake().onTrue(intake.stowIntake());
-        OI.zeroIntake().onTrue(intake.zeroExtender());
-        OI.runRoller().whileTrue(intake.intakeRollerCommand());
-        OI.stopIntake().whileTrue(intake.outtakeRollerCommand());
+        OI.intake().whileTrue(intake.intakeRollerCommand());
+        OI.outtake().whileTrue(intake.outtakeRollerCommand());
+        OI.toggleIntakeState().toggleOnTrue(intake.toggleIntake());
     }
 
     /**
