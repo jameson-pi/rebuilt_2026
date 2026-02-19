@@ -27,17 +27,9 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.GyroIOSim;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
-import frc.robot.subsystems.drive.ModuleIOTalonFXSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOReal;
@@ -45,11 +37,8 @@ import frc.robot.subsystems.intake.extender.ExtenderIOSim;
 import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOReal;
 import frc.robot.subsystems.intake.roller.RollerIOSim;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.vision.*;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIKeyboard;
 import frc.robot.util.OILayer.OIXbox;
@@ -69,18 +58,20 @@ public class RobotContainer {
     private final Drive drive;
     private final Vision vision;
     private final Intake intake;
+    private final OI OIController;
 
     private SwerveDriveSimulation driveSimulation = null;
 
-    // Controller
-    private final CommandXboxController controller = new CommandXboxController(0);
-    private final OI oi;
+    private final boolean usingController;
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+
+        usingController = true;
+
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -139,7 +130,7 @@ public class RobotContainer {
                 break;
         }
 
-        oi = Constants.usingKeyboard ? new OIKeyboard() : new OIXbox();
+        OIController = usingController ? new OIXbox() : new OIKeyboard();
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -185,17 +176,14 @@ public class RobotContainer {
                 .withName("Start Signal Logger"));
 
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(
-                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
-
-        // Lock to 0° when A button is held
-        controller
-                .a()
-                .whileTrue(DriveCommands.joystickDriveAtAngle(
-                        drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(
+                drive,
+                OIController.driveTranslationY(),
+                OIController.driveTranslationX(),
+                OIController.driveRotation()));
 
         // Switch to X pattern when X button is pressed
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // OIController.xPattern().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -204,7 +192,7 @@ public class RobotContainer {
                 // during
                 // simulation
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-        controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 
     /**
