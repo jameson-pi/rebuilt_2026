@@ -10,7 +10,7 @@ public class OIKeyboard implements OI {
     private static final XboxController controller = new XboxController(0);
 
     // *** Keyboard 0 Mappings ***
-    // Axies
+    // Axes
     public static final DoubleSupplier AxisAD = () -> controller.getRawAxis(0);
     public static final DoubleSupplier AxisWS = () -> controller.getRawAxis(1);
     public static final DoubleSupplier AxisRE = () -> controller.getRawAxis(2);
@@ -73,5 +73,36 @@ public class OIKeyboard implements OI {
     @Override
     public Trigger zeroDrivebase() {
         return Z;
+    }
+
+    @Override
+    public Trigger intake() {
+        return M;
+    }
+
+    @Override
+    public Trigger outtake() {
+        return Comma;
+    }
+
+    @Override
+    public Trigger stopIntake() {
+        return Slash;
+    }
+
+    // TODO:TEMPORARY:::PLEASE REMOVE
+    @Override
+    public Trigger extendIntake() {
+        return PgUp;
+    }
+
+    @Override
+    public Trigger retractIntake() {
+        return PgDown;
+    }
+
+    @Override
+    public Trigger zeroIntake() {
+        return Home;
     }
 }

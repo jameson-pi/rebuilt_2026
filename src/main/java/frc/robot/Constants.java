@@ -27,8 +27,21 @@ public final class Constants {
     public static enum Mode {
         /** Running on a real robot. */
         REAL,
-
         /** Running a physics simulator. */
         SIM,
+    }
+
+    public static class CANIDs {
+        public static class MotorIDs {
+            // TODO: Fix incorrect Constants
+            public static final int kRollerMotorID = 10;
+            public static final int kExtenderMotorID = 9;
+        }
+
+        public static class SensorIDs {
+            // TODO: Fix incorrect Constants
+            public static final int kPivotEncoderID = 1;
+            public static final int kExtenderEncoderID = 2;
+        }
     }
 }
