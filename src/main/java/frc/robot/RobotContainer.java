@@ -139,11 +139,16 @@ public class RobotContainer {
         autoChooser.addOption("Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
         autoChooser.addOption("Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
         autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+                "Drive SysId All",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdDynamic(SysIdRoutine.Direction.kForward))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdDynamic(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(() -> SignalLogger.stop()));
         autoChooser.addOption(
                 "Drive SysID Turning (All)",
                 drive.sysIdDynamicTurning(SysIdRoutine.Direction.kForward)
@@ -152,7 +157,8 @@ public class RobotContainer {
                         .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
                         .andThen(Commands.waitSeconds(1))
-                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse)));
+                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse))
+                        .andThen(() -> SignalLogger.stop()));
 
         // Configure the button bindings
         configureButtonBindings();
@@ -165,25 +171,33 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
 
+        SignalLogger.start();
+
+        Logger.recordOutput("SignalLogger", false);
         SmartDashboard.putData(Commands.runOnce(() -> {
                     SignalLogger.stop();
+                    Logger.recordOutput("SignalLogger", false);
                 })
                 .withName("Stop Signal Logger"));
 
         SmartDashboard.putData(Commands.runOnce(() -> {
                     SignalLogger.start();
+                    Logger.recordOutput("SignalLogger", true);
                 })
                 .withName("Start Signal Logger"));
 
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive,
-                OIController.driveTranslationY(),
-                OIController.driveTranslationX(),
-                OIController.driveRotation()));
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
 
-        // Switch to X pattern when X button is pressed
-        // OIController.xPattern().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // // Lock to 0° when A button is held
+        // controller
+        //         .a()
+        //         .whileTrue(DriveCommands.joystickDriveAtAngle(
+        //                 drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
+
+        // // Switch to X pattern when X button is pressed
+        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
