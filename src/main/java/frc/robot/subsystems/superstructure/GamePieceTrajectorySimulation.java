@@ -57,7 +57,7 @@ public class GamePieceTrajectorySimulation {
                     "Fuel", // Game piece type name
                     new Circle(0.075), // Radius: 5.91"/2 = 2.955" = 0.075m
                     Inches.of(5.91), // Height (diameter for a sphere)
-                    Kilograms.of(0.215), // Average mass: (0.203 + 0.227) / 2
+                    Pounds.of(0.5),
                     2.0, // Linear damping (foam has some air resistance)
                     3.0, // Angular damping
                     0.6); // Coefficient of restitution (foam bounces moderately)

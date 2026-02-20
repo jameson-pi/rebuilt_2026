@@ -74,8 +74,8 @@ public class Superstructure extends SubsystemBase {
     // Testing / Bench Mode
     private static final LoggedNetworkNumber benchModeEnabled =
             new LoggedNetworkNumber("Shooting/BenchMode/Enabled", ShooterConstants.defaultBenchModeEnabled);
-    private static final LoggedNetworkNumber benchModeDistanceFeet =
-            new LoggedNetworkNumber("Shooting/BenchMode/DistanceFeet", ShooterConstants.defaultBenchModeDistanceFeet);
+    private static final LoggedNetworkNumber benchModeDistanceFeet = new LoggedNetworkNumber(
+            "Shooting/BenchMode/DistanceMeters>", ShooterConstants.defaultBenchModeDistanceMeters);
 
     private final Shooter shooter;
     private final Hood hood;

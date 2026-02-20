@@ -13,7 +13,10 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -24,14 +27,18 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.left.LeftShooter;
 import frc.robot.subsystems.superstructure.GamePieceTrajectorySimulation;
+import frc.robot.subsystems.superstructure.Superstructure;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -72,7 +79,10 @@ public class ShooterCalibrationCommand extends Command {
     // Test parameters
     private final Distance[] testDistances;
     private final Angle[] testAngles;
-    private final AngularVelocity[] testRPMs;
+    private final AngularVelocity lowerBound;
+    private final AngularVelocity upperBound;
+    private AngularVelocity currentVelocity;
+    private final double speedInterations = 8;
 
     // State tracking
     private int currentDistanceIndex = 0;
@@ -80,7 +90,7 @@ public class ShooterCalibrationCommand extends Command {
     private int currentRPMIndex = 0;
     private CalibrationState state = CalibrationState.SETUP_POSITION;
     private final Timer stateTimer = new Timer();
-
+    private GamePieceProjectile currentShot; // Track the current shot for trajectory analysis
     // Results
     private final List<ShotConfiguration> results = new ArrayList<>();
     private final List<ShotConfiguration> successfulShots = new ArrayList<>();
@@ -92,11 +102,14 @@ public class ShooterCalibrationCommand extends Command {
 
     // Hub scoring detection
     private Translation2d hubPosition;
-    private static final double HUB_RADIUS = FieldConstants.HUB_OPENING_DIAMETER.in(Meters) / 2.0;
+    private static final double HUB_RADIUS =
+            FieldConstants.HUB_OPENING_DIAMETER.in(Meters) / 2.0 / 6; // Use quarter the radius to be conservative
     private static final double HUB_HEIGHT = FieldConstants.HUB_OPENING_HEIGHT.in(Meters);
 
     // Shot result tracking (for early termination)
     private ShotResult lastShotResult = ShotResult.PENDING;
+    private AngularVelocity tempLowerBound;
+    private AngularVelocity tempUpperBound;
 
     private enum ShotResult {
         PENDING, // Still tracking
@@ -161,12 +174,18 @@ public class ShooterCalibrationCommand extends Command {
                     Degrees.of(75),
                     Degrees.of(80)
                 },
-                // Default test RPMs: 2000 to 5000 in 500 RPM increments
-                new AngularVelocity[] {
-                    RPM.of(2000), RPM.of(2500), RPM.of(3000), RPM.of(3500), RPM.of(4000), RPM.of(4500), RPM.of(5000)
-                });
+                RPM.of(2000),
+                RPM.of(6000));
     }
 
+    public ShooterCalibrationCommand(Superstructure superstructure, SwerveDriveSimulation drive) {
+        this(
+                superstructure.getHood(),
+                superstructure.getLeftShooter(),
+                superstructure.getGamePieceTrajectorySimulation(),
+                drive,
+                drive::setSimulationWorldPose);
+    }
     /**
      * Creates a new ShooterCalibrationCommand with custom test ranges.
      *
@@ -187,17 +206,38 @@ public class ShooterCalibrationCommand extends Command {
             Consumer<Pose2d> poseResetter,
             Distance[] testDistances,
             Angle[] testAngles,
-            AngularVelocity[] testRPMs) {
-        this.hood = hood;
-        this.shooter = shooter;
-        this.trajectorySim = trajectorySim;
-        this.driveSim = driveSim;
-        this.poseResetter = poseResetter;
-        this.testDistances = testDistances;
-        this.testAngles = testAngles;
-        this.testRPMs = testRPMs;
+            AngularVelocity lowerBound,
+            AngularVelocity upperBound) {
 
-        addRequirements(hood, shooter);
+        if (Constants.EnabledSubsystems.kHood) {
+            this.hood = hood;
+            this.shooter = shooter;
+            this.trajectorySim = trajectorySim;
+            this.driveSim = driveSim;
+            this.poseResetter = poseResetter;
+            this.testDistances = testDistances;
+            this.testAngles = testAngles;
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+            this.tempLowerBound = lowerBound;
+            this.tempUpperBound = upperBound;
+
+            addRequirements(hood, shooter);
+        } else {
+            this.hood = hood;
+            this.shooter = shooter;
+            this.trajectorySim = trajectorySim;
+            this.driveSim = driveSim;
+            this.poseResetter = poseResetter;
+            this.testDistances = testDistances;
+            this.testAngles = new Angle[] {ShooterConstants.fixedHoodAngle}; // Only one angle when hood is disabled
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+            this.tempLowerBound = lowerBound;
+            this.tempUpperBound = upperBound;
+
+            addRequirements(shooter);
+        }
     }
 
     @Override
@@ -215,7 +255,7 @@ public class ShooterCalibrationCommand extends Command {
         trajectorySim.setBallsInHopper(1000); // Lots of balls for testing
 
         Logger.recordOutput("Calibration/Status", "Starting calibration...");
-        Logger.recordOutput("Calibration/TotalTests", testDistances.length * testAngles.length * testRPMs.length);
+        Logger.recordOutput("Calibration/TotalTests", testDistances.length * testAngles.length * speedInterations);
     }
 
     @Override
@@ -229,25 +269,43 @@ public class ShooterCalibrationCommand extends Command {
 
         switch (state) {
             case SETUP_POSITION -> {
+
                 // Teleport robot to test position facing the hub
                 Distance currentDistance = testDistances[currentDistanceIndex];
                 Pose2d testPose = calculateTestPose(currentDistance);
-
+                lastShotResult = getShotResult();
                 // Teleport the simulated robot
                 driveSim.setSimulationWorldPose(testPose);
                 poseResetter.accept(testPose);
 
                 // Set hood angle and flywheel speed
                 Angle currentAngle = testAngles[currentAngleIndex];
-                AngularVelocity currentRPM = testRPMs[currentRPMIndex];
-
-                hood.setAngle(currentAngle);
-                shooter.setFlywheelVelocity(currentRPM);
+                // AngularVelocity currentRPM = testRPMs[currentRPMIndex];d;
+                if (lastShotResult == ShotResult.SCORED) {
+                    // If the last shot scored, we can try a slightly higher velocity
+                    currentRPMIndex = 100;
+                } else if (lastShotResult == ShotResult.MISSED_SHORT || lastShotResult == ShotResult.MISSED_LOW) {
+                    // If the last shot was short or low, we need to increase velocity
+                    tempLowerBound = currentVelocity;
+                    currentVelocity = tempLowerBound.plus(tempUpperBound).times(0.5);
+                } else if (lastShotResult == ShotResult.MISSED_FAR) {
+                    // If the last shot was far, we need to decrease velocity
+                    tempUpperBound = currentVelocity;
+                    currentVelocity = tempLowerBound.plus(tempUpperBound).times(0.5);
+                } else {
+                    // If we don't have a result yet, just try the midpoint
+                    currentVelocity = tempLowerBound.plus(tempUpperBound).times(0.5);
+                }
+                if (hood != null) {
+                    hood.setAngle(currentAngle);
+                }
+                shooter.setFlywheelVelocity(currentVelocity);
 
                 Logger.recordOutput("Calibration/TestDistance", currentDistance.in(Meters));
                 Logger.recordOutput("Calibration/TestAngle", currentAngle.in(Degrees));
-                Logger.recordOutput("Calibration/TestRPM", currentRPM.in(RPM));
-
+                Logger.recordOutput("Calibration/TestRPM", currentVelocity.in(RPM));
+                Logger.recordOutput("Calibration/LowerBoundRPM", lowerBound.in(RPM));
+                Logger.recordOutput("Calibration/UpperBoundRPM", upperBound.in(RPM));
                 stateTimer.restart();
                 state = CalibrationState.WAIT_FOR_SETTLE;
             }
@@ -256,12 +314,13 @@ public class ShooterCalibrationCommand extends Command {
                 // Wait for hood and flywheel to reach setpoint
                 if (stateTimer.hasElapsed(SETTLE_TIME)) {
                     // Check if flywheel is up to speed (within 5%)
-                    double targetRPM = testRPMs[currentRPMIndex].in(RPM);
                     // double actualRPM = (shooter.getLeftFlywheelVelocity().in(RPM)
                     //                 + shooter.getRightFlywheelVelocity().in(RPM))
                     //         / 2.0;
                     double actualRPM = shooter.getFlywheelVelocity().in(RPM);
-                    if (Math.abs(actualRPM - targetRPM) / targetRPM < 0.05) {
+                    if (Math.abs(actualRPM - currentVelocity.in(RotationsPerSecond))
+                                    / currentVelocity.in(RotationsPerSecond)
+                            < 0.05) {
                         state = CalibrationState.FIRE_SHOT;
                     } else if (stateTimer.hasElapsed(SETTLE_TIME * 3)) {
                         // Timeout - proceed anyway
@@ -272,7 +331,7 @@ public class ShooterCalibrationCommand extends Command {
 
             case FIRE_SHOT -> {
                 // Fire a single shot
-                trajectorySim.launchGamePiece();
+                currentShot = trajectorySim.launchGamePiece();
 
                 stateTimer.restart();
                 state = CalibrationState.WAIT_FOR_RESULT;
@@ -280,6 +339,7 @@ public class ShooterCalibrationCommand extends Command {
 
             case WAIT_FOR_RESULT -> {
                 // Wait for ball to travel and check if it scored
+                Logger.recordOutput("Calibration/Current Position", currentShot.getPose3d());
                 if (stateTimer.hasElapsed(SHOT_TRAVEL_TIME)) {
                     // Determine if shot was successful by checking trajectory endpoint
                     // For now, we use a simple heuristic based on the last trajectory
@@ -289,15 +349,17 @@ public class ShooterCalibrationCommand extends Command {
                     ShotConfiguration config = new ShotConfiguration(
                             testDistances[currentDistanceIndex],
                             testAngles[currentAngleIndex],
-                            testRPMs[currentRPMIndex],
+                            currentVelocity,
                             scored);
                     results.add(config);
 
                     if (scored) {
+                        tempLowerBound = lowerBound;
+                        tempUpperBound = upperBound;
                         successfulShots.add(config);
-                        Logger.recordOutput("Calibration/LastResult", "SUCCESS: " + config.toString());
+                        Logger.recordOutput("Calibration/LastResult", "SUCCESS: " + config.toString() + lastShotResult);
                     } else {
-                        Logger.recordOutput("Calibration/LastResult", "MISS: " + config.toString());
+                        Logger.recordOutput("Calibration/LastResult", "MISS: " + config.toString() + lastShotResult);
                     }
 
                     state = CalibrationState.NEXT_CONFIGURATION;
@@ -307,7 +369,7 @@ public class ShooterCalibrationCommand extends Command {
             case NEXT_CONFIGURATION -> {
                 // Move to next configuration
                 currentRPMIndex++;
-                if (currentRPMIndex >= testRPMs.length) {
+                if (currentRPMIndex >= speedInterations) {
                     currentRPMIndex = 0;
                     currentAngleIndex++;
                     if (currentAngleIndex >= testAngles.length) {
@@ -390,6 +452,49 @@ public class ShooterCalibrationCommand extends Command {
         return false;
     }
 
+    private ShotResult getShotResult() {
+        Pose3d[] trajectory = trajectorySim.getLastTrajectory();
+        if (trajectory == null || trajectory.length < 2) {
+            return ShotResult.TIMEOUT;
+        }
+
+        for (int i = 1; i < trajectory.length; i++) {
+            Pose3d prevPoint = trajectory[i - 1];
+            Pose3d point = trajectory[i];
+
+            double dx = point.getX() - hubPosition.getX();
+            double dy = point.getY() - hubPosition.getY();
+            double horizontalDistance = Math.sqrt(dx * dx + dy * dy);
+            double height = point.getZ();
+            double prevHeight = prevPoint.getZ();
+
+            boolean isDescending = height < prevHeight;
+
+            if (horizontalDistance < HUB_RADIUS
+                    && height > HUB_HEIGHT - 0.3
+                    && height < HUB_HEIGHT + 0.5
+                    && isDescending) {
+                return ShotResult.SCORED;
+            }
+
+            // Check if ball has passed the hub horizontally
+            if (point.getX() > hubPosition.getX() + HUB_RADIUS) {
+                return ShotResult.MISSED_FAR;
+            }
+
+            // Check if ball has landed before reaching the hub
+            if (height < 0.1 && point.getX() < hubPosition.getX() - HUB_RADIUS) {
+                return ShotResult.MISSED_SHORT;
+            }
+
+            // Check if ball is descending below hub height without scoring
+            if (height < HUB_HEIGHT - 0.3 && isDescending) {
+                return ShotResult.MISSED_LOW;
+            }
+        }
+        Timer.delay(1);
+        return getShotResult();
+    }
     /** Log the calibration results. */
     private void logResults() {
         Logger.recordOutput("Calibration/Status", "COMPLETE");

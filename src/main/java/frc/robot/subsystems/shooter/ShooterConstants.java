@@ -2,8 +2,10 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import java.util.HashMap;
 
 /**
  * Shared constants used by both left and right shooters. Per-shooter constants live in left/LeftShooterConstants and
@@ -22,7 +24,7 @@ public class ShooterConstants {
         DOU_INTERPOLATION
     }
 
-    public static final CalculationMode defaultCalculationMode = CalculationMode.PHYSICS;
+    public static final CalculationMode defaultCalculationMode = CalculationMode.DOU_INTERPOLATION;
 
     /** Fixed hood angle to use when hood is disabled (degrees) */
     public static final Angle fixedHoodAngle = Degrees.of(60);
@@ -66,5 +68,25 @@ public class ShooterConstants {
 
     // Bench Mode Defaults
     public static final double defaultBenchModeEnabled = 1;
-    public static final double defaultBenchModeDistanceFeet = 10.0;
+    public static final double defaultBenchModeDistanceMeters = 10.0;
+    // Shooter Tuning
+    public static final HashMap<Distance, AngularVelocity> distanceToAngularVelocity = new HashMap<>();
+
+    static {
+        distanceToAngularVelocity.put(Meters.of(2.0), RPM.of(2750));
+        distanceToAngularVelocity.put(Meters.of(3.0), RPM.of(3156));
+        distanceToAngularVelocity.put(Meters.of(4.0), RPM.of(3512));
+        distanceToAngularVelocity.put(Meters.of(5.0), RPM.of(3823));
+        distanceToAngularVelocity.put(Meters.of(6.0), RPM.of(4095));
+    }
+
+    public static final InterpolatingDoubleTreeMap distanceToAngularVelocityDouMapRPM =
+            new InterpolatingDoubleTreeMap();
+
+    static {
+        for (Distance distance : distanceToAngularVelocity.keySet()) {
+            distanceToAngularVelocityDouMapRPM.put(
+                    distance.in(Meters), distanceToAngularVelocity.get(distance).in(RPM));
+        }
+    }
 }

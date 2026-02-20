@@ -68,10 +68,7 @@ public final class Constants {
     }
 
     public static enum Mode {
-        /** Running on a real robot. */
         REAL,
-
-        /** Running a physics simulator. */
         SIM,
     }
 
@@ -81,8 +78,8 @@ public final class Constants {
         public static final int kShooterFlywheelRightMotorCANID = 22;
         public static final int kShooterFlywheelRightFollowerCANID = 27;
         public static final int kShooterHoodMotorCANID = 23;
-        public static final int kShooterSpinMotorLeftCANID = 10;
-        public static final int kShooterSpinMotorRightCANID = 25;
-        public static final int kUpgoerMotorCANID = 10;
+        public static final int kShooterSpinMotorLeftCANID = 27; //
+        public static final int kShooterSpinMotorRightCANID = 25; // FIXME
+        public static final int kUpgoerMotorCANID = 15;
     }
 }

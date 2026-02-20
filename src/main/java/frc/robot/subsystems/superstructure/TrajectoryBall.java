@@ -18,35 +18,14 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterConstants.CalculationMode;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /** Utility class for calculating shooter trajectories, including Shooting on the Fly (SotF). */
 public class TrajectoryBall {
-    // Tunable Grid Keys
-    private static final double[] distanceKeys = {2.0, 4.0, 6.0, 8.0}; // Meters
-    private static final double[] radialSpeedKeys = {-2.0, 0.0, 2.0}; // Meters per second
-
-    // Grid Values (RPM)
-    private static final LoggedNetworkNumber[][] rpmGrid = new LoggedNetworkNumber[4][3];
-    // Grid Values (Hood)
-    private static final LoggedNetworkNumber[][] hoodGrid = new LoggedNetworkNumber[4][3];
-
-    static {
-        for (int i = 0; i < distanceKeys.length; i++) {
-            for (int j = 0; j < radialSpeedKeys.length; j++) {
-                rpmGrid[i][j] = new LoggedNetworkNumber(
-                        String.format("Shooting/Map/RPM/D%.1f_S%.1f", distanceKeys[i], radialSpeedKeys[j]), 3000.0);
-                hoodGrid[i][j] = new LoggedNetworkNumber(
-                        String.format("Shooting/Map/Hood/D%.1f_S%.1f", distanceKeys[i], radialSpeedKeys[j]), 45.0);
-            }
-        }
-    }
 
     /** Resulting setpoints for a shooting maneuver. */
     public record ShootingParameters(Angle hoodAngle, AngularVelocity flywheelVelocity, Rotation2d targetHeading) {}
@@ -86,43 +65,38 @@ public class TrajectoryBall {
 
         // Field-relative robot velocity
         Rotation2d heading = robotPose.getRotation();
-        double fieldVx;
-        double fieldVy;
-        if (robotSpeeds == null) {
-            // Treat null robotSpeeds as zero velocity to avoid null pointer dereference
-            fieldVx = 0.0;
-            fieldVy = 0.0;
-        } else {
-            fieldVx =
-                    robotSpeeds.vxMetersPerSecond * heading.getCos()
-                            - robotSpeeds.vyMetersPerSecond * heading.getSin();
-            fieldVy =
-                    robotSpeeds.vxMetersPerSecond * heading.getSin()
-                            + robotSpeeds.vyMetersPerSecond * heading.getCos();
-        }
+        double fieldVx =
+                robotSpeeds.vxMetersPerSecond * heading.getCos() - robotSpeeds.vyMetersPerSecond * heading.getSin();
+        double fieldVy =
+                robotSpeeds.vxMetersPerSecond * heading.getSin() + robotSpeeds.vyMetersPerSecond * heading.getCos();
 
         if (mode == CalculationMode.DOU_INTERPOLATION) {
             // key 1: distance, key 2: radial velocity (positive = moving towards)
             double radialVelocity = fieldVx * staticAngle.getCos() + fieldVy * staticAngle.getSin();
-            double rpm =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, rpmGrid);
-            double hood =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, hoodGrid);
+            double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(staticDistance.in(Meters));
 
             // Calculation for shot heading (same as physics mode for now)
             // But if we are moving, we need to lead the shot.
             // Simplified lead: v_ball_field = v_ball_robot + v_robot_field.
             // We want v_ball_field to point towards hub.
             // This is complex without TOF. For map mode, we'll assume the heading is hub-relative.
-            return new ShootingParameters(Degrees.of(hood + hoodAngleOffset), RPM.of(rpm * rpmMultiplier), staticAngle);
+            return new ShootingParameters(ShooterConstants.fixedHoodAngle, RPM.of(rpm * rpmMultiplier), staticAngle);
         }
 
         // 1. Initial stationary trajectory
         TrajectoryResult stationary;
-        if (hasHood) {
-            stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+        if (mode == CalculationMode.DOU_INTERPOLATION) {
+            if (hasHood) {
+                stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+            } else {
+                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            }
         } else {
-            stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            if (hasHood) {
+                stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+            } else {
+                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            }
         }
 
         double t = stationary.totalTime();
@@ -161,6 +135,12 @@ public class TrajectoryBall {
         return finalizeParameters(launchAngle, totalLaunchSpeed, targetHeading, hoodAngleOffset, rpmMultiplier);
     }
 
+    private static TrajectoryResult calculateStationaryMap(Distance distance) {
+        double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(distance.in(Meters));
+        return new TrajectoryResult(
+                ShooterConstants.fixedHoodAngle, MetersPerSecond.of(ShooterConstants.flywheelRadius.in(Meters)), 1);
+    }
+
     private static TrajectoryResult calculateStationary(Distance distance, Distance maxHeight, Distance targetHeight) {
         Distance startHeight = ShooterConstants.shooterHeight;
         Distance riseHeight = maxHeight.minus(startHeight);
@@ -195,13 +175,8 @@ public class TrajectoryBall {
         double gravity = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
         double deltaH = targetHeight.minus(ShooterConstants.shooterHeight).in(Meters);
 
+        // v = sqrt( (g * d^2) / (2 * cos^2(theta) * (d * tan(theta) - deltaH)) )
         double cosTheta = Math.cos(theta);
-
-        // Safety check for vertical or near-vertical shots to avoid division by zero
-        if (Math.abs(cosTheta) < 1e-6) {
-            return new TrajectoryResult(fixedAngle, MetersPerSecond.of(0.0), 1.0);
-        }
-
         double denominator = 2 * cosTheta * cosTheta * (d * Math.tan(theta) - deltaH);
 
         if (denominator <= 0) {
@@ -209,17 +184,13 @@ public class TrajectoryBall {
         }
 
         double launchSpeedMps = Math.sqrt((gravity * d * d) / denominator);
-
-        // Optional: Add a multiplier for real-world drag (e.g., 1.05 for 5% boost)
-        launchSpeedMps *= ShooterConstants.kDragCompensation;
-
         double timeOfFlight = d / (launchSpeedMps * cosTheta);
 
         return new TrajectoryResult(fixedAngle, MetersPerSecond.of(launchSpeedMps), timeOfFlight);
     }
 
     private static ShootingParameters finalizeParameters(
-            Angle launchAngle, LinearVelocity launchSpeed, Rotation2d heading, double hoodOffset, double rpmMulti) {
+            Angle launchAngle, LinearVelocity launchSpeed, Rotation2d heading, double hoodOffset, double rpmMult) {
         // Apply offsets and clamps
         double hoodDegrees = launchAngle.in(Degrees) + hoodOffset;
         hoodDegrees = Math.max(
@@ -229,24 +200,12 @@ public class TrajectoryBall {
         double flywheelRadiusMeters = ShooterConstants.flywheelRadius.in(Meters);
         double angularVelRadPerSec =
                 (launchSpeed.in(MetersPerSecond) / ShooterConstants.launchEfficiency) / flywheelRadiusMeters;
-        double rpm = RadiansPerSecond.of(angularVelRadPerSec).in(RPM) * rpmMulti;
+        double rpm = RadiansPerSecond.of(angularVelRadPerSec).in(RPM) * rpmMult;
 
         rpm = Math.max(
                 ShooterConstants.minShootingFlywheelVelocity.in(RPM),
                 Math.min(ShooterConstants.maxShootingFlywheelVelocity.in(RPM), rpm));
 
         return new ShootingParameters(Degrees.of(hoodDegrees), RPM.of(rpm), heading);
-    }
-
-    private static double interpolate2d(double x, double y, LoggedNetworkNumber[][] grid) {
-        InterpolatingDoubleTreeMap xMap = new InterpolatingDoubleTreeMap();
-        for (int i = 0; i < distanceKeys.length; i++) {
-            InterpolatingDoubleTreeMap yMap = new InterpolatingDoubleTreeMap();
-            for (int j = 0; j < radialSpeedKeys.length; j++) {
-                yMap.put(radialSpeedKeys[j], grid[i][j].get());
-            }
-            xMap.put(distanceKeys[i], yMap.get(y));
-        }
-        return xMap.get(x);
     }
 }

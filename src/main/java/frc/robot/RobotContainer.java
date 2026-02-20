@@ -13,14 +13,25 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ShooterCalibrationCommand;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIXbox;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -30,25 +41,37 @@ import frc.robot.util.OILayer.OIXbox;
 public class RobotContainer {
     // Subsystems
     private final Superstructure superstructure;
-
+    private final Drive drive;
+    private final Vision vision;
+    private final SwerveDriveSimulation
+            driveSimulation; // Only used in simulation, but declared here for easy access by subsystems that need it
+    private final RobotState robotState;
     // OI Layer
     private final OI oi = new OIXbox();
 
+    private final LoggedDashboardChooser<Command> autoChooser;
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        RobotState.create();
-
-        /*
+        robotState = RobotState.create();
         switch (Constants.currentMode) {
             case REAL:
+                // drive = new Drive(
+                //         new GyroIOPigeon2(),
+                //         new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
+                //         new ModuleIOTalonFXReal(TunerConstants.FrontRight),
+                //         new ModuleIOTalonFXReal(TunerConstants.BackLeft),
+                //         new ModuleIOTalonFXReal(TunerConstants.BackRight),
+                //         (pose) -> {});
+                // vision = new Vision(drive); // Add vision IOs as needed
                 drive = new Drive(
-                        new GyroIOPigeon2(),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontRight),
-                        new ModuleIOTalonFXReal(TunerConstants.BackLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.BackRight),
+                        new GyroIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
+                        new ModuleIO() {},
                         (pose) -> {});
-                vision = new Vision(drive); // Add vision IOs as needed
+                vision = new Vision(drive);
+                driveSimulation = null;
                 break;
             case SIM:
                 driveSimulation =
@@ -75,34 +98,35 @@ public class RobotContainer {
                         new ModuleIO() {},
                         (pose) -> {});
                 vision = new Vision(drive);
+                driveSimulation = null;
                 break;
         }
-        */
 
         superstructure = new Superstructure();
-        /*
+
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
+        if (Constants.currentMode == Constants.Mode.SIM) {
+            autoChooser.addOption("Shooter Tuning Sim", new ShooterCalibrationCommand(superstructure, driveSimulation));
+        }
         // Set up SysId routines
-        autoChooser.addOption("Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-        autoChooser.addOption("Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // autoChooser.addOption("Drive Wheel Radius Characterization",
+        // DriveCommands.wheelRadiusCharacterization(drive));
+        // autoChooser.addOption("Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+        // autoChooser.addOption(
+        //         "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // autoChooser.addOption(
+        //         "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         // Configure the button bindings
 
-
-        // robotState.setPoseSupplier(drive::getPose);
-                */
+        robotState.setPoseSupplier(drive::getPose);
         configureButtonBindings();
     }
 
@@ -112,7 +136,6 @@ public class RobotContainer {
      * and then passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        /*
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
@@ -142,7 +165,7 @@ public class RobotContainer {
                     .withName("PreviewTrajectory"));
         }
 
-        oi.spinUpShooter().whileTrue(autoAimCommand);
+        oi.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
 
         // Manual fire (feeds piece when shooter is ready)
         oi.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
@@ -156,7 +179,6 @@ public class RobotContainer {
                 ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
         oi.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-        */
 
         // Shooter Bring-up / Bench Mode Bindings
         oi.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
@@ -173,22 +195,18 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return null; // autoChooser.getSelected();
+        return autoChooser.get();
     }
 
     public void resetSimulation() {
-        /*
         if (Constants.currentMode != Constants.Mode.SIM || driveSimulation == null) return;
 
         driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
-        */
     }
 
     public void updateSimulation() {
-        /*
         if (driveSimulation != null) {
             Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
         }
-        */
     }
 }
