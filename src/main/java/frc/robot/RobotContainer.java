@@ -28,7 +28,7 @@ import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.OILayer.OI;
-import frc.robot.util.OILayer.OIKeyboard;
+import frc.robot.util.OILayer.OIXbox;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -47,7 +47,7 @@ public class RobotContainer {
             driveSimulation; // Only used in simulation, but declared here for easy access by subsystems that need it
     private final RobotState robotState;
     // OI Layer
-    private final OI oi = new OIKeyboard();
+    private final OI oi = new OIXbox();
 
     private final LoggedDashboardChooser<Command> autoChooser;
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
