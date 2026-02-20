@@ -14,9 +14,10 @@ public interface ExtenderIO {
     class ExtenderIOInputs {
         public boolean isExtended = false;
         public boolean isRetracted = false;
-        public Angle position = Degrees.of(0.0);
+        public Angle position = Degrees.zero();
         public Angle setpoint = Degrees.of(0.0);
         public Voltage motorVoltage = Volts.of(0.0);
+        public boolean atTarget = false;
     }
 
     default void updateInputs(ExtenderIOInputs inputs) {}
@@ -30,6 +31,10 @@ public interface ExtenderIO {
     default void goToSiftAngleTwo() {}
 
     default BooleanSupplier isExtended() {
+        return () -> false;
+    }
+
+    default BooleanSupplier isRetracted() {
         return () -> false;
     }
 

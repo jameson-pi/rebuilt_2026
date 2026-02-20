@@ -56,6 +56,9 @@ public class RobotContainer {
     // Subsystems
 
     private final Drive drive;
+
+    // Jay was here and basiclly is the reason that this code works <3
+
     private final Vision vision;
     private final Intake intake;
     private final OI OIController;
@@ -63,7 +66,7 @@ public class RobotContainer {
     private SwerveDriveSimulation driveSimulation = null;
 
     private final boolean usingController;
-
+    
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -210,6 +213,11 @@ public class RobotContainer {
                 // simulation
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        // OIController.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+
+        OIController.intake().whileTrue(intake.intakeRollerCommand());
+        OIController.outtake().whileTrue(intake.outtakeRollerCommand());
+        OIController.toggleIntakeState().toggleOnTrue(intake.toggleIntake());
     }
 
     /**

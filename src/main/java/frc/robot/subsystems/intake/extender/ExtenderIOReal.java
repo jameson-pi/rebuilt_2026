@@ -1,7 +1,7 @@
 package frc.robot.subsystems.intake.extender;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -25,7 +25,7 @@ public class ExtenderIOReal implements ExtenderIO {
     private Angle setpoint;
 
     public ExtenderIOReal() {
-        this.setpoint = Degrees.of(0.0);
+        this.setpoint = Rotations.of(0.0);
 
         extenderPID = new Slot0Configs();
         extenderPID.kP = ExtenderConstants.PIDF.kP;
@@ -52,8 +52,19 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        this.setpoint = position;
-        extenderMotor.setControl(new PositionVoltage(position));
+        this.setpoint = Rotations.of(Math.max(
+                ExtenderConstants.kExtenderMinAngle.in(Rotations),
+                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Rotations), position.in(Rotations))));
+        extenderMotor.setControl(new PositionVoltage(this.setpoint));
+    }
+
+    public Angle getPosition() {
+        return extenderMotor.getPosition().getValue();
+    }
+
+    public boolean isAtAngle(Angle angle) {
+        return Math.abs((getPosition().minus(angle)).in(Rotations))
+                < ExtenderConstants.kExtenderTolerance.in(Rotations);
     }
 
     @Override
@@ -73,16 +84,17 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public BooleanSupplier isExtended() {
-        return () -> Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
-                        .in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return () -> isAtAngle(ExtenderConstants.kExtenderIntakeAngle);
+    }
+
+    @Override
+    public BooleanSupplier isRetracted() {
+        return () -> isAtAngle(ExtenderConstants.kExtenderStowAngle);
     }
 
     @Override
     public BooleanSupplier atTarget() {
-        return () ->
-                Math.abs(extenderMotor.getPosition().getValue().minus(setpoint).in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return () -> isAtAngle(setpoint);
     }
 
     @Override
@@ -97,31 +109,21 @@ public class ExtenderIOReal implements ExtenderIO {
 
     @Override
     public void toggle() {
-        if (Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle)).in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
-
+        if (isAtAngle(ExtenderConstants.kExtenderStowAngle)) {
             extend();
-
-        } else if (Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
-                        .in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees)) {
+        } else if (isAtAngle(ExtenderConstants.kExtenderIntakeAngle)) {
             retract();
         }
     }
 
     @Override
     public void updateInputs(ExtenderIOInputs inputs) {
-        inputs.isExtended =
-                Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderIntakeAngle))
-                                .in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
-        inputs.isRetracted =
-                Math.abs((extenderMotor.getPosition().getValue().minus(ExtenderConstants.kExtenderStowAngle))
-                                .in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
-        inputs.position = extenderMotor.getPosition().getValue();
+        inputs.isExtended = isExtended().getAsBoolean();
+        inputs.isRetracted = isRetracted().getAsBoolean();
+        inputs.position = getPosition();
         inputs.setpoint = setpoint;
         inputs.motorVoltage = Volts.of(extenderMotor.getMotorVoltage().getValueAsDouble());
+        inputs.atTarget = atTarget().getAsBoolean();
     }
 
     @Override

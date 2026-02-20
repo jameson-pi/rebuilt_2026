@@ -69,15 +69,6 @@ public interface OI {
         return noButton;
     }
 
-    // TODO:TEMPORARY:::PLEASE REMOVE
-    default Trigger extendIntake() {
-        return noButton;
-    }
-
-    default Trigger retractIntake() {
-        return noButton;
-    }
-
     default Trigger zeroIntake() {
         return noButton;
     }
