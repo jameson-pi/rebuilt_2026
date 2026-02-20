@@ -13,6 +13,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -82,7 +83,9 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                intake = new Intake(Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {}, Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
+                intake = new Intake(
+                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
+                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIO() {},
@@ -98,7 +101,9 @@ public class RobotContainer {
                 // Sim robot, instantiate physics sim IO implementations
 
                 driveSimulation = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
-                intake = new Intake(Constants.EnabledSubsystems.kRoller ? new RollerIOSim(driveSimulation) : new RollerIO() {}, Constants.EnabledSubsystems.kExtender ? new ExtenderIOSim() : new ExtenderIO() {});
+                intake = new Intake(
+                        Constants.EnabledSubsystems.kRoller ? new RollerIOSim(driveSimulation) : new RollerIO() {},
+                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOSim() : new ExtenderIO() {});
                 SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
@@ -111,9 +116,7 @@ public class RobotContainer {
                         new ModuleIOTalonFXSim(
                                 TunerConstants.BackRight, driveSimulation.getModules()[3]),
                         (pose) -> driveSimulation.setSimulationWorldPose(pose));
-                vision = new Vision(
-                        drive,
-                        new VisionIOLimelight(camera0Name, drive::getRotation));
+                vision = new Vision(drive, new VisionIOLimelight(camera0Name, drive::getRotation));
                 break;
             default:
                 drive = new Drive(
@@ -167,7 +170,6 @@ public class RobotContainer {
 
         // Configure the button bindings
 
-        robotState.setPoseSupplier(drive::getPose);
         configureButtonBindings();
     }
 
@@ -192,21 +194,9 @@ public class RobotContainer {
                         () -> -OIController.driveTranslationX().getAsDouble(),
                         () -> new Rotation2d()));
 
-        // Full auto-aim (aims robot + sets shooter RPM and hood angle)
-        Command autoAimCommand = superstructure.fullAutoAim(
-                drive, () -> -OIController.driveTranslationY().getAsDouble(), () -> -OIController.driveTranslationX()
-                        .getAsDouble());
-
-        if (Constants.currentMode == Constants.Mode.SIM) {
-            autoAimCommand = autoAimCommand.alongWith(Commands.run(() -> {
-                        if (superstructure.hasGamePieceTrajectorySimulation()) {
-                            superstructure.getGamePieceTrajectorySimulation().previewTrajectory();
-                        }
-                    })
-                    .withName("PreviewTrajectory"));
-        }
-
-        OIController.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
+        OIController.spinUpShooter()
+                .whileTrue(
+                        Commands.runOnce(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000))));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
@@ -219,16 +209,6 @@ public class RobotContainer {
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
                 ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
-        OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-
-        // Shooter Bring-up / Bench Mode Bindings
-        OIController.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
-
-        OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
-
-        OIController.stopSuperstructure()
-                .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
-
         OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 

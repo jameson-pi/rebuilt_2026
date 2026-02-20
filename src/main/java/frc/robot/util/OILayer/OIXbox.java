@@ -106,12 +106,12 @@ public class OIXbox implements OI {
     // TODO:TEMPORARY:::PLEASE REMOVE
     @Override
     public Trigger extendIntake() {
-        return leftBumper;
+        return noButton;
     }
 
     @Override
     public Trigger retractIntake() {
-        return rightBumper;
+        return noButton;
     }
 
     @Override
