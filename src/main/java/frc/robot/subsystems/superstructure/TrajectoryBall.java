@@ -23,29 +23,9 @@ import edu.wpi.first.units.measure.*;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterConstants.CalculationMode;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /** Utility class for calculating shooter trajectories, including Shooting on the Fly (SotF). */
 public class TrajectoryBall {
-    // Tunable Grid Keys
-    private static final double[] distanceKeys = {2.0, 4.0, 6.0, 8.0}; // Meters
-    private static final double[] radialSpeedKeys = {-2.0, 0.0, 2.0}; // Meters per second
-
-    // Grid Values (RPM)
-    private static final LoggedNetworkNumber[][] rpmGrid = new LoggedNetworkNumber[4][3];
-    // Grid Values (Hood)
-    private static final LoggedNetworkNumber[][] hoodGrid = new LoggedNetworkNumber[4][3];
-
-    static {
-        for (int i = 0; i < distanceKeys.length; i++) {
-            for (int j = 0; j < radialSpeedKeys.length; j++) {
-                rpmGrid[i][j] = new LoggedNetworkNumber(
-                        String.format("Shooting/Map/RPM/D%.1f_S%.1f", distanceKeys[i], radialSpeedKeys[j]), 3000.0);
-                hoodGrid[i][j] = new LoggedNetworkNumber(
-                        String.format("Shooting/Map/Hood/D%.1f_S%.1f", distanceKeys[i], radialSpeedKeys[j]), 45.0);
-            }
-        }
-    }
 
     /** Resulting setpoints for a shooting maneuver. */
     public record ShootingParameters(Angle hoodAngle, AngularVelocity flywheelVelocity, Rotation2d targetHeading) {}
@@ -93,25 +73,30 @@ public class TrajectoryBall {
         if (mode == CalculationMode.DOU_INTERPOLATION) {
             // key 1: distance, key 2: radial velocity (positive = moving towards)
             double radialVelocity = fieldVx * staticAngle.getCos() + fieldVy * staticAngle.getSin();
-            double rpm =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, distanceKeys, radialSpeedKeys, rpmGrid);
-            double hood =
-                    interpolate2d(staticDistance.in(Meters), radialVelocity, distanceKeys, radialSpeedKeys, hoodGrid);
+            double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(staticDistance.in(Meters));
 
             // Calculation for shot heading (same as physics mode for now)
             // But if we are moving, we need to lead the shot.
             // Simplified lead: v_ball_field = v_ball_robot + v_robot_field.
             // We want v_ball_field to point towards hub.
             // This is complex without TOF. For map mode, we'll assume the heading is hub-relative.
-            return new ShootingParameters(Degrees.of(hood + hoodAngleOffset), RPM.of(rpm * rpmMultiplier), staticAngle);
+            return new ShootingParameters(ShooterConstants.fixedHoodAngle, RPM.of(rpm * rpmMultiplier), staticAngle);
         }
 
         // 1. Initial stationary trajectory
         TrajectoryResult stationary;
-        if (hasHood) {
-            stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+        if (mode == CalculationMode.DOU_INTERPOLATION) {
+            if (hasHood) {
+                stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+            } else {
+                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            }
         } else {
-            stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            if (hasHood) {
+                stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
+            } else {
+                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+            }
         }
 
         double t = stationary.totalTime();
@@ -148,6 +133,12 @@ public class TrajectoryBall {
         Rotation2d targetHeading = new Rotation2d(launchVxField, launchVyField);
 
         return finalizeParameters(launchAngle, totalLaunchSpeed, targetHeading, hoodAngleOffset, rpmMultiplier);
+    }
+
+    private static TrajectoryResult calculateStationaryMap(Distance distance) {
+        double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(distance.in(Meters));
+        return new TrajectoryResult(
+                ShooterConstants.fixedHoodAngle, MetersPerSecond.of(ShooterConstants.flywheelRadius.in(Meters)), 1);
     }
 
     private static TrajectoryResult calculateStationary(Distance distance, Distance maxHeight, Distance targetHeight) {
@@ -216,56 +207,5 @@ public class TrajectoryBall {
                 Math.min(ShooterConstants.maxShootingFlywheelVelocity.in(RPM), rpm));
 
         return new ShootingParameters(Degrees.of(hoodDegrees), RPM.of(rpm), heading);
-    }
-
-    private static double interpolate2d(
-            double x, double y, double[] xKeys, double[] yKeys, LoggedNetworkNumber[][] grid) {
-        // Bilinear interpolation
-        int x0 = 0, x1 = 0;
-        if (x <= xKeys[0]) {
-            x0 = 0;
-            x1 = 0;
-        } else if (x >= xKeys[xKeys.length - 1]) {
-            x0 = xKeys.length - 1;
-            x1 = xKeys.length - 1;
-        } else {
-            for (int i = 0; i < xKeys.length - 1; i++) {
-                if (x >= xKeys[i] && x <= xKeys[i + 1]) {
-                    x0 = i;
-                    x1 = i + 1;
-                    break;
-                }
-            }
-        }
-
-        int y0 = 0, y1 = 0;
-        if (y <= yKeys[0]) {
-            y0 = 0;
-            y1 = 0;
-        } else if (y >= yKeys[yKeys.length - 1]) {
-            y0 = yKeys.length - 1;
-            y1 = yKeys.length - 1;
-        } else {
-            for (int j = 0; j < yKeys.length - 1; j++) {
-                if (y >= yKeys[j] && y <= yKeys[j + 1]) {
-                    y0 = j;
-                    y1 = j + 1;
-                    break;
-                }
-            }
-        }
-
-        double vx0y0 = grid[x0][y0].get();
-        double vx1y0 = grid[x1][y0].get();
-        double vx0y1 = grid[x0][y1].get();
-        double vx1y1 = grid[x1][y1].get();
-
-        double xFraction = (x1 == x0) ? 0 : (x - xKeys[x0]) / (xKeys[x1] - xKeys[x0]);
-        double yFraction = (y1 == y0) ? 0 : (y - yKeys[y0]) / (yKeys[y1] - yKeys[y0]);
-
-        double vLowY = vx0y0 + xFraction * (vx1y0 - vx0y0);
-        double vHighY = vx0y1 + xFraction * (vx1y1 - vx0y1);
-
-        return vLowY + yFraction * (vHighY - vLowY);
     }
 }
