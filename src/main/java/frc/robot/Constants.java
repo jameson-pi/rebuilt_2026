@@ -65,6 +65,8 @@ public final class Constants {
         public static final boolean kShooterRight = false;
         public static final boolean kHood = false;
         public static final boolean kUpgoer = true;
+        public static final boolean kRoller = false;
+        public static final boolean kExtender = false;
     }
 
     public static enum Mode {
