@@ -44,7 +44,7 @@ public class HoodIOKrakenX60 implements HoodIO {
     private Hood hood;
 
     public HoodIOKrakenX60() {
-        motor = new TunableTalonFX(Constants.CANIDs.kShooterHoodMotorCANID, "rio", "Hood/Hood Motor");
+        motor = new TunableTalonFX(Constants.CANIDs.MotorIDs.kShooterHoodMotorCANID, "rio", "Hood/Hood Motor");
 
         // Configure motor
         var config = new TalonFXConfiguration();

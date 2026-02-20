@@ -47,7 +47,7 @@ public class UpgoerIOKrakenX60 implements UpgoerIO {
 
     public UpgoerIOKrakenX60() {
         motor = new TunableTalonFX(
-                Constants.CANIDs.kUpgoerMotorCANID,
+                Constants.CANIDs.MotorIDs.kUpgoerMotorCANID,
                 UpgoerConstants.canBusName,
                 "Upgoer/Motor",
                 new Slot0Configs()

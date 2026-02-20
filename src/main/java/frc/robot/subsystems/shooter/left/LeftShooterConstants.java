@@ -11,9 +11,9 @@ public class LeftShooterConstants {
     public static final String name = "LeftShooter";
 
     // CAN IDs
-    public static final int flywheelLeaderId = Constants.CANIDs.kShooterFlywheelLeftMotorCANID;
-    public static final int flywheelFollowerId = Constants.CANIDs.kShooterFlywheelLeftFollowerCANID;
-    public static final int spinMotorId = Constants.CANIDs.kShooterSpinMotorLeftCANID;
+    public static final int flywheelLeaderId = Constants.CANIDs.MotorIDs.kShooterFlywheelLeftMotorCANID;
+    public static final int flywheelFollowerId = Constants.CANIDs.MotorIDs.kShooterFlywheelLeftFollowerCANID;
+    public static final int spinMotorId = Constants.CANIDs.MotorIDs.kShooterSpinMotorLeftCANID;
 
     // CAN bus name
     public static final String canBusName = "rio";

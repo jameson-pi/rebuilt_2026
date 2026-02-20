@@ -115,7 +115,7 @@ public class LeftShooter extends SubsystemBase {
     // ========== Command Factory Methods ==========
 
     public Command spinUpFlywheels(AngularVelocity velocity) {
-        return Commands.run(() -> setFlywheelVelocity(velocity), this).withName("LeftSpinUp");
+        return Commands.runOnce(() -> setFlywheelVelocity(velocity), this).withName("LeftSpinUp");
     }
 
     public Command spinUpFlywheels(Supplier<AngularVelocity> velocitySupplier) {

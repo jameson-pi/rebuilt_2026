@@ -74,21 +74,18 @@ public final class Constants {
     }
 
     public static final class CANIDs {
-        public static final int kShooterFlywheelLeftMotorCANID = 12;
-        public static final int kShooterFlywheelLeftFollowerCANID = 11;
-        public static final int kShooterFlywheelRightMotorCANID = 22;
-        public static final int kShooterFlywheelRightFollowerCANID = 27;
-        public static final int kShooterHoodMotorCANID = 23;
-        public static final int kShooterSpinMotorLeftCANID = 27; //
-        public static final int kShooterSpinMotorRightCANID = 25; // FIXME
-        public static final int kUpgoerMotorCANID = 15;
-    }
-
-    public static class CANIDs {
         public static class MotorIDs {
             // TODO: Fix incorrect Constants
             public static final int kRollerMotorID = 10;
             public static final int kExtenderMotorID = 9;
+            public static final int kShooterFlywheelLeftMotorCANID = 12;
+            public static final int kShooterFlywheelLeftFollowerCANID = 11;
+            public static final int kShooterFlywheelRightMotorCANID = 22;
+            public static final int kShooterFlywheelRightFollowerCANID = 27;
+            public static final int kShooterHoodMotorCANID = 23;
+            public static final int kShooterSpinMotorLeftCANID = 27; //
+            public static final int kShooterSpinMotorRightCANID = 25; // FIXME
+            public static final int kUpgoerMotorCANID = 15;
         }
 
         public static class SensorIDs {

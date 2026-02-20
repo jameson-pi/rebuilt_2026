@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.vision.VisionConstants.*;
+
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,13 +25,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ShooterCalibrationCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
-import frc.robot.subsystems.state.RobotState;
-import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.util.OILayer.OI;
-import frc.robot.util.OILayer.OIXbox;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOReal;
@@ -36,7 +35,11 @@ import frc.robot.subsystems.intake.extender.ExtenderIOSim;
 import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOReal;
 import frc.robot.subsystems.intake.roller.RollerIOSim;
-import frc.robot.subsystems.vision.*;
+import frc.robot.subsystems.state.RobotState;
+import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIKeyboard;
 import frc.robot.util.OILayer.OIXbox;
@@ -44,9 +47,6 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
-import static frc.robot.subsystems.vision.VisionConstants.*;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -59,14 +59,12 @@ public class RobotContainer {
 
     private final Drive drive;
     private final Vision vision;
-private final Intake intake;
+    private final Intake intake;
     private final OI OIController;
 
     private final SwerveDriveSimulation
             driveSimulation; // Only used in simulation, but declared here for easy access by subsystems that need it
     private final RobotState robotState;
-    // OI Layer
-    private final OI oi = new OIXbox();
 
     private final boolean usingController;
 
@@ -78,6 +76,11 @@ private final Intake intake;
 
         usingController = true;
 
+        if (usingController) {
+            OIController = new OIXbox();
+        } else {
+            OIController = new OIKeyboard();
+        }
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -180,20 +183,23 @@ private final Intake intake;
      */
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(
-                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(
+                drive,
+                OIController.driveTranslationY(),
+                OIController.driveTranslationX(),
+                OIController.driveRotation()));
 
         // Lock to 0° when button is held
-        oi.driveLock0()
+        OIController.driveLock0()
                 .whileTrue(DriveCommands.joystickDriveAtAngle(
                         drive,
-                        () -> -oi.driveTranslationY().getAsDouble(),
-                        () -> -oi.driveTranslationX().getAsDouble(),
+                        () -> -OIController.driveTranslationY().getAsDouble(),
+                        () -> -OIController.driveTranslationX().getAsDouble(),
                         () -> new Rotation2d()));
 
         // Full auto-aim (aims robot + sets shooter RPM and hood angle)
         Command autoAimCommand = superstructure.fullAutoAim(
-                drive, () -> -oi.driveTranslationY().getAsDouble(), () -> -oi.driveTranslationX()
+                drive, () -> -OIController.driveTranslationY().getAsDouble(), () -> -OIController.driveTranslationX()
                         .getAsDouble());
 
         if (Constants.currentMode == Constants.Mode.SIM) {
@@ -205,33 +211,29 @@ private final Intake intake;
                     .withName("PreviewTrajectory"));
         }
 
-        oi.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
+        OIController.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
 
         // Manual fire (feeds piece when shooter is ready)
-        oi.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
+        OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
 
         // Stop all components
-        oi.stopSuperstructure()
+        OIController.stopSuperstructure()
                 .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
                 ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
-        oi.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
         // Shooter Bring-up / Bench Mode Bindings
-        oi.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
+        OIController.spinUpShooter().whileTrue(superstructure.autoSpeedShooter());
 
-        oi.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
+        OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
 
-        oi.stopSuperstructure()
+        OIController.stopSuperstructure()
                 .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
-                ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // reset odometry to
-                // actual robot pose
-                // during
-                // simulation
-                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
+
         OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 
