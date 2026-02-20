@@ -67,7 +67,7 @@ public class ShooterConstants {
 
     // Bench Mode Defaults
     public static final double defaultBenchModeEnabled = 1;
-    public static final double defaultBenchModeDistanceFeet = 10.0;
+    public static final double defaultBenchModeDistanceMeters = 10.0;
     // Shooter Tuning
     public static final HashMap<Distance, AngularVelocity> distanceToAngularVelocity = new HashMap<>();
 
