@@ -37,9 +37,7 @@ import frc.robot.subsystems.intake.roller.RollerIOReal;
 import frc.robot.subsystems.intake.roller.RollerIOSim;
 import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.*;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIKeyboard;
 import frc.robot.util.OILayer.OIXbox;
@@ -84,7 +82,7 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                intake = new Intake(new RollerIOReal(), new ExtenderIOReal());
+                intake = new Intake(Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {}, Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIO() {},
@@ -100,7 +98,7 @@ public class RobotContainer {
                 // Sim robot, instantiate physics sim IO implementations
 
                 driveSimulation = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
-                intake = new Intake(new RollerIOSim(driveSimulation), new ExtenderIOSim());
+                intake = new Intake(Constants.EnabledSubsystems.kRoller ? new RollerIOSim(driveSimulation) : new RollerIO() {}, Constants.EnabledSubsystems.kExtender ? new ExtenderIOSim() : new ExtenderIO() {});
                 SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
@@ -115,10 +113,7 @@ public class RobotContainer {
                         (pose) -> driveSimulation.setSimulationWorldPose(pose));
                 vision = new Vision(
                         drive,
-                        new VisionIOPhotonVisionSim(
-                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-                        new VisionIOPhotonVisionSim(
-                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                        new VisionIOLimelight(camera0Name, drive::getRotation));
                 break;
             default:
                 drive = new Drive(
@@ -158,7 +153,7 @@ public class RobotContainer {
                         .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdDynamic(SysIdRoutine.Direction.kReverse))
                         .andThen(Commands.waitSeconds(1))
-                        .andThen(() -> SignalLogger.stop()));
+                        .andThen(SignalLogger::stop));
         autoChooser.addOption(
                 "Drive SysID Turning (All)",
                 drive.sysIdDynamicTurning(SysIdRoutine.Direction.kForward)
@@ -168,7 +163,7 @@ public class RobotContainer {
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
                         .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse))
-                        .andThen(() -> SignalLogger.stop()));
+                        .andThen(SignalLogger::stop));
 
         // Configure the button bindings
 
