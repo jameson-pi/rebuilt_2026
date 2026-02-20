@@ -20,8 +20,8 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.ShooterCalibrationCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.state.RobotState;
@@ -29,9 +29,24 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIXbox;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.extender.ExtenderIO;
+import frc.robot.subsystems.intake.extender.ExtenderIOReal;
+import frc.robot.subsystems.intake.extender.ExtenderIOSim;
+import frc.robot.subsystems.intake.roller.RollerIO;
+import frc.robot.subsystems.intake.roller.RollerIOReal;
+import frc.robot.subsystems.intake.roller.RollerIOSim;
+import frc.robot.subsystems.vision.*;
+import frc.robot.util.OILayer.OI;
+import frc.robot.util.OILayer.OIKeyboard;
+import frc.robot.util.OILayer.OIXbox;
+import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
+import static frc.robot.subsystems.vision.VisionConstants.*;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -41,28 +56,32 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
     // Subsystems
     private final Superstructure superstructure;
+
     private final Drive drive;
     private final Vision vision;
+private final Intake intake;
+    private final OI OIController;
+
     private final SwerveDriveSimulation
             driveSimulation; // Only used in simulation, but declared here for easy access by subsystems that need it
     private final RobotState robotState;
     // OI Layer
     private final OI oi = new OIXbox();
 
+    private final boolean usingController;
+
+    // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         robotState = RobotState.create();
+
+        usingController = true;
+
         switch (Constants.currentMode) {
             case REAL:
-                // drive = new Drive(
-                //         new GyroIOPigeon2(),
-                //         new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
-                //         new ModuleIOTalonFXReal(TunerConstants.FrontRight),
-                //         new ModuleIOTalonFXReal(TunerConstants.BackLeft),
-                //         new ModuleIOTalonFXReal(TunerConstants.BackRight),
-                //         (pose) -> {});
-                // vision = new Vision(drive); // Add vision IOs as needed
+                // Real robot, instantiate hardware IO implementations
+                intake = new Intake(new RollerIOReal(), new ExtenderIOReal());
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIO() {},
@@ -73,9 +92,13 @@ public class RobotContainer {
                 vision = new Vision(drive);
                 driveSimulation = null;
                 break;
+
             case SIM:
-                driveSimulation =
-                        new SwerveDriveSimulation(Drive.createMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
+                // Sim robot, instantiate physics sim IO implementations
+
+                driveSimulation = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+                intake = new Intake(new RollerIOSim(driveSimulation), new ExtenderIOSim());
+                SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
                         new ModuleIOTalonFXSim(
@@ -87,7 +110,12 @@ public class RobotContainer {
                         new ModuleIOTalonFXSim(
                                 TunerConstants.BackRight, driveSimulation.getModules()[3]),
                         (pose) -> driveSimulation.setSimulationWorldPose(pose));
-                vision = new Vision(drive);
+                vision = new Vision(
+                        drive,
+                        new VisionIOPhotonVisionSim(
+                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                        new VisionIOPhotonVisionSim(
+                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 break;
             default:
                 drive = new Drive(
@@ -97,8 +125,9 @@ public class RobotContainer {
                         new ModuleIO() {},
                         new ModuleIO() {},
                         (pose) -> {});
-                vision = new Vision(drive);
                 driveSimulation = null;
+                vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+                intake = new Intake(new RollerIO() {}, new ExtenderIO() {});
                 break;
         }
 
@@ -114,15 +143,29 @@ public class RobotContainer {
             autoChooser.addOption("Shooter Tuning Sim", new ShooterCalibrationCommand(superstructure, driveSimulation));
         }
         // Set up SysId routines
-        // autoChooser.addOption("Drive Wheel Radius Characterization",
-        // DriveCommands.wheelRadiusCharacterization(drive));
-        // autoChooser.addOption("Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-        // autoChooser.addOption(
-        //         "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        // autoChooser.addOption(
-        //         "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        // autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        // autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        autoChooser.addOption("Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+        autoChooser.addOption("Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+        autoChooser.addOption(
+                "Drive SysId All",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdDynamic(SysIdRoutine.Direction.kForward))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdDynamic(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(() -> SignalLogger.stop()));
+        autoChooser.addOption(
+                "Drive SysID Turning (All)",
+                drive.sysIdDynamicTurning(SysIdRoutine.Direction.kForward)
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdDynamicTurning(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse))
+                        .andThen(() -> SignalLogger.stop()));
 
         // Configure the button bindings
 
@@ -137,11 +180,8 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive,
-                () -> -oi.driveTranslationY().getAsDouble(),
-                () -> -oi.driveTranslationX().getAsDouble(),
-                () -> -oi.driveRotation().getAsDouble()));
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
 
         // Lock to 0° when button is held
         oi.driveLock0()
@@ -187,6 +227,12 @@ public class RobotContainer {
 
         oi.stopSuperstructure()
                 .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
+                ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // reset odometry to
+                // actual robot pose
+                // during
+                // simulation
+                : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
+        OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 
     /**
@@ -205,8 +251,10 @@ public class RobotContainer {
     }
 
     public void updateSimulation() {
-        if (driveSimulation != null) {
-            Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
-        }
+        if (Constants.currentMode != Constants.Mode.SIM) return;
+
+        SimulatedArena.getInstance().simulationPeriodic();
+        Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
+        Logger.recordOutput("FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
     }
 }

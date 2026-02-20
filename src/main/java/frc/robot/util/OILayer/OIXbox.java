@@ -51,17 +51,17 @@ public class OIXbox implements OI {
 
     @Override
     public DoubleSupplier driveTranslationX() {
-        return leftX;
+        return () -> driveTranslationCurve.calculate(leftX.getAsDouble());
     }
 
     @Override
     public DoubleSupplier driveTranslationY() {
-        return leftY;
+        return () -> driveTranslationCurve.calculate(leftY.getAsDouble());
     }
 
     @Override
     public DoubleSupplier driveRotation() {
-        return rightX;
+        return () -> driveRotationCurve.calculate(rightX.getAsDouble());
     }
 
     @Override
@@ -94,13 +94,29 @@ public class OIXbox implements OI {
     }
 
     @Override
-    public DoubleSupplier intake() {
-        return rightTrigger;
+    public Trigger intake() {
+        return rightTriggerAsButton;
     }
 
     @Override
-    public DoubleSupplier outtake() {
-        return leftTrigger;
+    public Trigger outtake() {
+        return leftTriggerAsButton;
+    }
+
+    // TODO:TEMPORARY:::PLEASE REMOVE
+    @Override
+    public Trigger extendIntake() {
+        return leftBumper;
+    }
+
+    @Override
+    public Trigger retractIntake() {
+        return rightBumper;
+    }
+
+    @Override
+    public Trigger zeroIntake() {
+        return x;
     }
 
     @Override

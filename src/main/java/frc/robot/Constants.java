@@ -69,6 +69,7 @@ public final class Constants {
 
     public static enum Mode {
         REAL,
+        /** Running a physics simulator. */
         SIM,
     }
 
@@ -81,5 +82,19 @@ public final class Constants {
         public static final int kShooterSpinMotorLeftCANID = 27; //
         public static final int kShooterSpinMotorRightCANID = 25; // FIXME
         public static final int kUpgoerMotorCANID = 15;
+    }
+
+    public static class CANIDs {
+        public static class MotorIDs {
+            // TODO: Fix incorrect Constants
+            public static final int kRollerMotorID = 10;
+            public static final int kExtenderMotorID = 9;
+        }
+
+        public static class SensorIDs {
+            // TODO: Fix incorrect Constants
+            public static final int kPivotEncoderID = 1;
+            public static final int kExtenderEncoderID = 2;
+        }
     }
 }

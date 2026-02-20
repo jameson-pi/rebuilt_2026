@@ -7,8 +7,8 @@ public interface OI {
     public final Trigger noButton = new Trigger(() -> false);
     public final DoubleSupplier noAxis = () -> 0.0;
 
-    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 3, 0.2, true);
-    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.2, true);
+    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 3, 0.02, false);
+    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.02, true);
 
     default DoubleSupplier driveTranslationX() {
         return noAxis;
@@ -26,6 +26,9 @@ public interface OI {
         return noButton;
     }
 
+    default Trigger stopIntake() {
+        return noButton;
+    }
     /* Puts the shooter into a mode where it is able to shoot (e.g. spins up a flywheel that was currently idle)
      * Rumbles joystick or turns on lights on the robot when it gets up to speed to be able to shoot
      * When button is release, return to an idle speed
@@ -47,14 +50,14 @@ public interface OI {
      *
      * Subsystem: Intake - spin the rollers forward when held, stop spinning when released
      */
-    default DoubleSupplier intake() {
-        return noAxis;
+    default Trigger intake() {
+        return noButton;
     }
 
     /* Run the rollers in reverse while held */
     /* Subsystem: Intake - spin the rollers backwards when held, stop spinning when released */
-    default DoubleSupplier outtake() {
-        return noAxis;
+    default Trigger outtake() {
+        return noButton;
     }
 
     /* When pressed, the intake will extend, and when pressed again, it will retract
@@ -63,6 +66,19 @@ public interface OI {
     /* Subsystem: Intake
     */
     default Trigger toggleIntakeState() {
+        return noButton;
+    }
+
+    // TODO:TEMPORARY:::PLEASE REMOVE
+    default Trigger extendIntake() {
+        return noButton;
+    }
+
+    default Trigger retractIntake() {
+        return noButton;
+    }
+
+    default Trigger zeroIntake() {
         return noButton;
     }
 
