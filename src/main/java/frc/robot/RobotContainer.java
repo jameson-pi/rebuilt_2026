@@ -187,8 +187,11 @@ public class RobotContainer {
                 .withName("Start Signal Logger"));
 
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(
-                DriveCommands.joystickDrive(drive, oi.driveTranslationY(), oi.driveTranslationX(), oi.driveRotation()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(
+                drive,
+                OIController.driveTranslationY(),
+                OIController.driveTranslationX(),
+                OIController.driveRotation()));
 
         // // Lock to 0° when A button is held
         // controller
