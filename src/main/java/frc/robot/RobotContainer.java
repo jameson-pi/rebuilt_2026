@@ -66,7 +66,7 @@ public class RobotContainer {
     private SwerveDriveSimulation driveSimulation = null;
 
     private final boolean usingController;
-    
+
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -217,7 +217,8 @@ public class RobotContainer {
 
         OIController.intake().whileTrue(intake.intakeRollerCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
-        OIController.toggleIntakeState().toggleOnTrue(intake.toggleIntake());
+        OIController.zeroIntake().onTrue(intake.zeroExtender());
+        OIController.toggleIntakeState().onTrue(intake.toggleIntake());
     }
 
     /**
