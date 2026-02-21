@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.roller;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -83,5 +84,6 @@ public class RollerIOSim implements RollerIO {
         inputs.rollerSpeedPercentile = intakeMotorSim.getMotorVoltage() / RobotController.getBatteryVoltage();
         inputs.rollerAppliedVolts = intakeMotorSim.getMotorVoltageMeasure();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
+        inputs.motorTemp = Celsius.of(25.0);
     }
 }

@@ -1,11 +1,12 @@
 package frc.robot.subsystems.intake.extender;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.KilogramMetersSquaredPerSecond;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -91,9 +92,9 @@ public class ExtenderIOSim implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        this.setpoint = Rotations.of(Math.max(
-                ExtenderConstants.kExtenderMinAngle.in(Rotations),
-                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Rotations), position.in(Rotations))));
+        this.setpoint = Degrees.of(Math.max(
+                ExtenderConstants.kExtenderMinAngle.in(Degrees),
+                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Degrees), position.in(Degrees))));
         extenderMotor.setControl(new PositionVoltage(this.setpoint));
     }
 
@@ -102,8 +103,7 @@ public class ExtenderIOSim implements ExtenderIO {
     }
 
     public boolean isAtAngle(Angle angle) {
-        return Math.abs((getPosition().minus(angle)).in(Rotations))
-                < ExtenderConstants.kExtenderTolerance.in(Rotations);
+        return Math.abs((getPosition().minus(angle)).in(Degrees)) < ExtenderConstants.kExtenderTolerance.in(Degrees);
     }
 
     @Override
@@ -161,7 +161,10 @@ public class ExtenderIOSim implements ExtenderIO {
         inputs.isRetracted = isRetracted().getAsBoolean();
         inputs.position = getPosition();
         inputs.setpoint = setpoint;
+        inputs.velocity = RadiansPerSecond.of(armSim.getVelocityRadPerSec());
         inputs.motorVoltage = Volts.of(extenderMotorSim.getMotorVoltage());
+        inputs.motorCurrent = Amps.of(armSim.getCurrentDrawAmps());
+        inputs.motorTemp = Celsius.of(25.0);
         inputs.atTarget = atTarget().getAsBoolean();
     }
 
