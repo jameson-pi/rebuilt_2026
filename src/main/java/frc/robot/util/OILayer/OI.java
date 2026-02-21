@@ -4,11 +4,14 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 
 public interface OI {
+
+    //
+
     public final Trigger noButton = new Trigger(() -> false);
     public final DoubleSupplier noAxis = () -> 0.0;
 
-    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 2.5, 0.02, true);
-    public final ControlCurve driveRotationCurve = new ControlCurve(1, 2.5, 0.02, false);
+    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 4, 0.05, true);
+    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.05, true);
 
     default DoubleSupplier driveTranslationX() {
         return noAxis;
@@ -43,6 +46,10 @@ public interface OI {
      * Subsystem: Shooter - turn on the feeding motor(s) to enable shooting to occur
      */
     default Trigger fireShooter() {
+        return noButton;
+    }
+
+    default Trigger unjamShooter() {
         return noButton;
     }
 
@@ -98,6 +105,16 @@ public interface OI {
 
     /* Subsystem: Climber */
     default Trigger climb_l3() {
+        return noButton;
+    }
+
+    /** Stop all superstructure mechanisms. */
+    default Trigger stopSuperstructure() {
+        return noButton;
+    }
+
+    /** While held, lock the drive rotation to 0 degrees. */
+    default Trigger driveLock0() {
         return noButton;
     }
 }

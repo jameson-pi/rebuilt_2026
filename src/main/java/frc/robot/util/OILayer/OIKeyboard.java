@@ -76,6 +76,26 @@ public class OIKeyboard implements OI {
     }
 
     @Override
+    public Trigger spinUpShooter() {
+        return C;
+    }
+
+    @Override
+    public Trigger fireShooter() {
+        return V;
+    }
+
+    @Override
+    public Trigger stopSuperstructure() {
+        return X;
+    }
+
+    @Override
+    public Trigger driveLock0() {
+        return Insert;
+    }
+
+    @Override
     public Trigger intake() {
         return M;
     }

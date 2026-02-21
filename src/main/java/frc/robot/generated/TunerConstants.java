@@ -43,12 +43,12 @@ public class TunerConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
-            .withKP(66.71625)
+            .withKP(66.87300)
             .withKI(0)
-            .withKD(10.452425)
-            .withKS(0.117308)
-            .withKV(2.54888)
-            .withKA(1.08670)
+            .withKD(1)
+            .withKS(0.128801)
+            .withKV(2.54833)
+            .withKA(0.86688)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
@@ -69,7 +69,7 @@ public class TunerConstants {
 
     // The type of motor used for the drive motor
     private static final DriveMotorArrangement kDriveMotorType = DriveMotorArrangement.TalonFX_Integrated;
-    // The type of motor used for the drive motor
+    // The type of motor used for the steer motor
     private static final SteerMotorArrangement kSteerMotorType = SteerMotorArrangement.TalonFX_Integrated;
 
     // The remote sensor feedback type to use for the steer motors;
@@ -239,7 +239,6 @@ public class TunerConstants {
                     kBackRightSteerMotorInverted,
                     kBackRightEncoderInverted);
 
-    /** Creates a CommandSwerveDrivetrain instance. This should only be called once in your robot program,. */
     //     public static CommandSwerveDrivetrain createDrivetrain() {
     //         return new CommandSwerveDrivetrain(DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight);
     //     }
