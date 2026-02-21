@@ -13,20 +13,20 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Degrees;
-import static frc.robot.subsystems.vision.VisionConstants.*;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
@@ -35,9 +35,11 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.vision.*;
+import frc.robot.util.OILayer.OI;
+import frc.robot.util.OILayer.OIKeyboard;
+import frc.robot.util.OILayer.OIXbox;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -51,16 +53,27 @@ public class RobotContainer {
     private final Drive drive;
     private final Vision vision;
     private final Indexer indexer;
+    private final OI OIController;
+
     private SwerveDriveSimulation driveSimulation = null;
 
     // Controller
-    private final CommandXboxController controller = new CommandXboxController(0);
+    // private final CommandXboxController controller = new CommandXboxController(0);
+    private final boolean usingController;
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+
+        usingController = true;
+
+        if (usingController) {
+            OIController = new OIXbox();
+        } else {
+            OIController = new OIKeyboard();
+        }
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -139,18 +152,21 @@ public class RobotContainer {
      * and then passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+
+        SmartDashboard.putData(Commands.runOnce(() -> {
+                    SignalLogger.stop();
+                })
+                .withName("Stop Signal Logger"));
+
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
-
-        // Lock to 0° when A button is held
-        controller
-                .a()
-                .whileTrue(DriveCommands.joystickDriveAtAngle(
-                        drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
+                drive,
+                OIController.driveTranslationY(),
+                OIController.driveTranslationX(),
+                OIController.driveRotation()));
 
         // Switch to X pattern when X button is pressed
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // OIController.xPattern().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -158,32 +174,7 @@ public class RobotContainer {
                         driveSimulation.getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
                 // simulation
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-        controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-
-        // Example Coral Placement Code
-        // TODO: delete these code for your own project
-        if (Constants.currentMode == Constants.Mode.SIM) {
-            // L4 placement
-            controller.y().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
-                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                            new Translation2d(0.4, 0),
-                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                            Meters.of(2),
-                            MetersPerSecond.of(1.5),
-                            Degrees.of(-80)))));
-            // L3 placement
-            controller.b().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
-                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                            new Translation2d(0.4, 0),
-                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                            Meters.of(1.35),
-                            MetersPerSecond.of(1.5),
-                            Degrees.of(-60)))));
-        }
+        OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     }
 
     /**
