@@ -14,7 +14,7 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command index() {
-        return runOnce(() -> indexerIO.index());
+        return runOnce(() -> indexerIO.setVelocity(IndexerConstants.kCollectorRPM));
     }
 
     public Command setCustomSpeed(double speed) {
@@ -22,7 +22,7 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command indexReverse() {
-        return runOnce(() -> indexerIO.indexReverse());
+        return runOnce(() -> indexerIO.setVelocity(IndexerConstants.kCollectorRPM.times(-1)));
     }
 
     public Command stop() {
