@@ -9,45 +9,63 @@ import java.util.function.DoubleSupplier;
 public class OIXbox implements OI {
     private static final double triggerThreshold = 0.5;
 
-    private static final XboxController controller = new XboxController(0);
+    private static final XboxController driverController = new XboxController(0);
+    private static final XboxController operatorController = new XboxController(1);
 
     // Face Buttons
-    public static final Trigger a = new JoystickButton(controller, XboxController.Button.kA.value);
-    public static final Trigger b = new JoystickButton(controller, XboxController.Button.kB.value);
-    public static final Trigger x = new JoystickButton(controller, XboxController.Button.kX.value);
-    public static final Trigger y = new JoystickButton(controller, XboxController.Button.kY.value);
+    public static final Trigger a = new JoystickButton(driverController, XboxController.Button.kA.value);
+    public static final Trigger b = new JoystickButton(driverController, XboxController.Button.kB.value);
+    public static final Trigger x = new JoystickButton(driverController, XboxController.Button.kX.value);
+    public static final Trigger y = new JoystickButton(driverController, XboxController.Button.kY.value);
 
     // Bumpers and Triggers
-    public static final Trigger leftBumper = new JoystickButton(controller, XboxController.Button.kLeftBumper.value);
-    public static final Trigger rightBumper = new JoystickButton(controller, XboxController.Button.kRightBumper.value);
+    public static final Trigger leftBumper =
+            new JoystickButton(driverController, XboxController.Button.kLeftBumper.value);
+    public static final Trigger rightBumper =
+            new JoystickButton(driverController, XboxController.Button.kRightBumper.value);
     public static final DoubleSupplier leftTrigger =
-            () -> controller.getRawAxis(XboxController.Axis.kLeftTrigger.value);
+            () -> driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value);
     public static final DoubleSupplier rightTrigger =
-            () -> controller.getRawAxis(XboxController.Axis.kRightTrigger.value);
+            () -> driverController.getRawAxis(XboxController.Axis.kRightTrigger.value);
     public static final Trigger leftTriggerAsButton =
-            new Trigger(() -> triggerThreshold < controller.getRawAxis(XboxController.Axis.kLeftTrigger.value));
+            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value));
     public static final Trigger rightTriggerAsButton =
-            new Trigger(() -> triggerThreshold < controller.getRawAxis(XboxController.Axis.kRightTrigger.value));
+            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kRightTrigger.value));
+
+    // Operator Bumpers and Triggers
+
+    public static final Trigger operatorLeftBumper =
+            new JoystickButton(driverController, XboxController.Button.kLeftBumper.value);
+    public static final Trigger operatorRightBumper =
+            new JoystickButton(driverController, XboxController.Button.kRightBumper.value);
+    public static final DoubleSupplier operatorLeftTrigger =
+            () -> driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value);
+    public static final DoubleSupplier operatorRightTrigger =
+            () -> driverController.getRawAxis(XboxController.Axis.kRightTrigger.value);
+    public static final Trigger operatorLeftTriggerAsButton =
+            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value));
+    public static final Trigger operatorRightTriggerAsButton =
+            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kRightTrigger.value));
 
     // DPad
-    public static final Trigger dPadUp = new POVButton(controller, 0);
-    public static final Trigger dPadDown = new POVButton(controller, 180);
-    public static final Trigger dPadRight = new POVButton(controller, 90);
-    public static final Trigger dPadLeft = new POVButton(controller, 270);
+    public static final Trigger dPadUp = new POVButton(driverController, 0);
+    public static final Trigger dPadDown = new POVButton(driverController, 180);
+    public static final Trigger dPadRight = new POVButton(driverController, 90);
+    public static final Trigger dPadLeft = new POVButton(driverController, 270);
 
     // Joysticks
     public static final Trigger leftStickButton =
-            new JoystickButton(controller, XboxController.Button.kLeftStick.value);
+            new JoystickButton(driverController, XboxController.Button.kLeftStick.value);
     public static final Trigger rightStickButton =
-            new JoystickButton(controller, XboxController.Button.kRightStick.value);
-    public static final DoubleSupplier leftX = () -> controller.getRawAxis(XboxController.Axis.kLeftX.value);
-    public static final DoubleSupplier leftY = () -> controller.getRawAxis(XboxController.Axis.kLeftY.value);
-    public static final DoubleSupplier rightX = () -> controller.getRawAxis(XboxController.Axis.kRightX.value);
-    public static final DoubleSupplier rightY = () -> controller.getRawAxis(XboxController.Axis.kRightY.value);
+            new JoystickButton(driverController, XboxController.Button.kRightStick.value);
+    public static final DoubleSupplier leftX = () -> driverController.getRawAxis(XboxController.Axis.kLeftX.value);
+    public static final DoubleSupplier leftY = () -> driverController.getRawAxis(XboxController.Axis.kLeftY.value);
+    public static final DoubleSupplier rightX = () -> driverController.getRawAxis(XboxController.Axis.kRightX.value);
+    public static final DoubleSupplier rightY = () -> driverController.getRawAxis(XboxController.Axis.kRightY.value);
 
     // Top Buttons
-    public static final Trigger start = new JoystickButton(controller, XboxController.Button.kStart.value);
-    public static final Trigger back = new JoystickButton(controller, XboxController.Button.kBack.value);
+    public static final Trigger start = new JoystickButton(driverController, XboxController.Button.kStart.value);
+    public static final Trigger back = new JoystickButton(driverController, XboxController.Button.kBack.value);
 
     @Override
     public DoubleSupplier driveTranslationX() {
@@ -80,22 +98,27 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger spinUpShooter() {
-        return rightBumper;
+        return operatorRightBumper;
     }
 
     @Override
     public Trigger fireShooter() {
-        return rightTriggerAsButton;
+        return operatorRightTriggerAsButton;
+    }
+
+    @Override
+    public Trigger unjamShooter() {
+        return operatorLeftTriggerAsButton;
     }
 
     @Override
     public Trigger stopSuperstructure() {
-        return b;
+        return operatorLeftBumper;
     }
 
     @Override
     public Trigger intake() {
-        return leftBumper;
+        return rightTriggerAsButton;
     }
 
     @Override
@@ -110,7 +133,7 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger toggleIntakeState() {
-        return y;
+        return rightBumper;
     }
 
     @Override

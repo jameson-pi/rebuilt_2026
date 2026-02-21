@@ -226,6 +226,10 @@ public class RobotContainer {
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
 
+        OIController.unjamShooter()
+                .whileTrue(superstructure.unjamCommand())
+                .onFalse(superstructure.stopUpgoerCommand());
+
         // Stop all components
         OIController.stopSuperstructure()
                 .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
@@ -240,7 +244,7 @@ public class RobotContainer {
         OIController.intake().whileTrue(intake.intakeRollerCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
         OIController.zeroIntake().onTrue(intake.zeroExtender());
-        OIController.toggleIntakeState().onTrue(intake.toggleIntake());
+        OIController.toggleIntakeState().onTrue(intake.toggleIntake()).onFalse(intake.toggleIntake());
     }
 
     /**
