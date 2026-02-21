@@ -57,6 +57,9 @@ public class RobotContainer {
     private final Superstructure superstructure;
 
     private final Drive drive;
+
+    // Jay was here and basiclly is the reason that this code works <3
+
     private final Vision vision;
     private final Intake intake;
     private final OI OIController;
@@ -210,6 +213,12 @@ public class RobotContainer {
                 ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose())
                 : () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
         OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        // OIController.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+
+        OIController.intake().whileTrue(intake.intakeRollerCommand());
+        OIController.outtake().whileTrue(intake.outtakeRollerCommand());
+        OIController.zeroIntake().onTrue(intake.zeroExtender());
+        OIController.toggleIntakeState().onTrue(intake.toggleIntake());
     }
 
     /**
