@@ -388,6 +388,15 @@ public class Superstructure extends SubsystemBase {
                 .withName("SuperstructureFire");
     }
 
+    public Command unjamCommand() {
+        return Commands.run(
+                        () -> {
+                            upgoer.setVelocity(UpgoerConstants.defaultUnjamVelocity);
+                        },
+                        upgoer)
+                .withName("SuperstructureUnjam");
+    }
+
     /** Full auto-aim command: aims robot at hub AND sets hood/flywheel automatically. */
     public Command fullAutoAim(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
         return aimAtHubWhileDriving(drive, xSupplier, ySupplier)

@@ -37,4 +37,5 @@ public class UpgoerConstants {
 
     // Default feed velocity
     public static final AngularVelocity defaultFeedVelocity = RPM.of(-4500.0);
+    public static final AngularVelocity defaultUnjamVelocity = RPM.of(4500.0);
 }

@@ -49,6 +49,10 @@ public interface OI {
         return noButton;
     }
 
+    default Trigger unjamShooter() {
+        return noButton;
+    }
+
     /* Run the rollers on the intake while held
      *
      * Subsystem: Intake - spin the rollers forward when held, stop spinning when released
