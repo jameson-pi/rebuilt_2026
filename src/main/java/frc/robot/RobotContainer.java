@@ -38,9 +38,6 @@ import frc.robot.subsystems.intake.roller.RollerIOReal;
 import frc.robot.subsystems.intake.roller.RollerIOSim;
 import frc.robot.subsystems.superstructure.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.IndexerIO;
-import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.OILayer.OI;
 import frc.robot.util.OILayer.OIKeyboard;
@@ -64,7 +61,6 @@ public class RobotContainer {
     // Jay was here and basiclly is the reason that this code works <3
 
     private final Vision vision;
-    private final Indexer indexer;
     private final Intake intake;
     private final OI OIController;
 
@@ -90,21 +86,6 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                drive = new Drive(
-                        new GyroIOPigeon2(),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontRight),
-                        new ModuleIOTalonFXReal(TunerConstants.BackLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.BackRight),
-                        (pose) -> {});
-                this.vision = new Vision(
-                        drive,
-                        new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
-                        new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
-                indexer = new Indexer(new IndexerIOReal());
-                intake = new Intake(
-                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
-                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
                 if (Constants.EnabledSubsystems.kDrive) {
                     drive = new Drive(
                             new GyroIOPigeon2(),
@@ -122,7 +103,14 @@ public class RobotContainer {
                             new ModuleIO() {},
                             (pose) -> {});
                 }
-                vision = new Vision(drive);
+                this.vision = new Vision(
+                        drive,
+                        new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
+                        new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
+                intake = new Intake(
+                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
+                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
+
                 driveSimulation = null;
                 break;
 
@@ -151,7 +139,6 @@ public class RobotContainer {
                                 camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                         new VisionIOPhotonVisionSim(
                                 camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
-                indexer = new Indexer(new frc.robot.subsystems.indexer.IndexerIOSim());
 
                 break;
             default:
@@ -164,12 +151,11 @@ public class RobotContainer {
                         (pose) -> {});
                 driveSimulation = null;
                 vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
-                indexer = new Indexer(new IndexerIO() {});
                 intake = new Intake(new RollerIO() {}, new ExtenderIO() {});
                 break;
         }
 
-        superstructure = new Superstructure();
+        superstructure = new Superstructure(intake::isRollerRunning);
 
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);

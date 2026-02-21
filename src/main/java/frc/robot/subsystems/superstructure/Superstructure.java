@@ -36,6 +36,10 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOKrakenX60;
 import frc.robot.subsystems.hood.HoodIOSim;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIO;
+import frc.robot.subsystems.indexer.IndexerIOReal;
+import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.left.LeftShooter;
@@ -82,11 +86,12 @@ public class Superstructure extends SubsystemBase {
     private final Shooter shooter;
     private final Hood hood;
     private final Upgoer upgoer;
+    private final Indexer indexer;
     private final RobotState robotState;
     private GamePieceTrajectorySimulation gamePieceTrajectorySimulation;
 
     /** Creates the superstructure and selects IO implementations by mode. */
-    public Superstructure() {
+    public Superstructure(BooleanSupplier isIntaking) {
         RobotState createdState = RobotState.getInstance();
         if (createdState == null) {
             createdState = RobotState.create();
@@ -97,24 +102,32 @@ public class Superstructure extends SubsystemBase {
 
         HoodIO hoodIO;
         UpgoerIO upgoerIO;
+        IndexerIO indexerIO;
 
         switch (Constants.currentMode) {
             case REAL:
                 hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOKrakenX60() : new HoodIO() {};
                 upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOKrakenX60() : new UpgoerIO() {};
+                indexerIO = new IndexerIOReal();
                 break;
             case SIM:
                 hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOSim() : new HoodIO() {};
                 upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOSim() : new UpgoerIO() {};
+                indexerIO = new IndexerIOSim();
                 break;
             default:
                 hoodIO = new HoodIO() {};
                 upgoerIO = new UpgoerIO() {};
+                indexerIO = new IndexerIO() {};
                 break;
         }
 
         this.hood = new Hood(hoodIO);
         this.upgoer = new Upgoer(upgoerIO);
+        this.indexer = new Indexer(indexerIO);
+
+        indexer.setDefaultCommand(
+                Commands.run(() -> indexer.setRunning(shooter.isRunning() || isIntaking.getAsBoolean()), indexer));
     }
 
     @Override

@@ -96,6 +96,10 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> extender.zero());
     }
 
+    public boolean isRollerRunning() {
+        return Math.abs(rollerInputs.rollerSpeedPercentile) > 0.1;
+    }
+
     @Override
     public void periodic() {
         roller.updateInputs(rollerInputs);

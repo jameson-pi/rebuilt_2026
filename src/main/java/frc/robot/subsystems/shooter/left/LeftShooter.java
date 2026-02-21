@@ -130,6 +130,10 @@ public class LeftShooter extends SubsystemBase {
         flywheelFailed = false;
     }
 
+    public boolean isRunning() {
+        return Math.abs(flywheelSetpoint.in(RPM)) > 1.0;
+    }
+
     // ========== Command Factory Methods ==========
 
     public Command spinUpFlywheels(AngularVelocity velocity) {

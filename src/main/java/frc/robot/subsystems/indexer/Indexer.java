@@ -29,6 +29,14 @@ public class Indexer extends SubsystemBase {
         return runOnce(() -> indexerIO.stop());
     }
 
+    public void setRunning(boolean running) {
+        if (running) {
+            indexerIO.setVelocity(IndexerConstants.kCollectorRPM);
+        } else {
+            indexerIO.stop();
+        }
+    }
+
     @Override
     public void periodic() {
         indexerIO.updateInputs(indexerInputs);
