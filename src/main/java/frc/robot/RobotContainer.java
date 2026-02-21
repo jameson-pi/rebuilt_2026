@@ -211,13 +211,13 @@ public class RobotContainer {
                 OIController.driveTranslationX(),
                 OIController.driveRotation()));
 
-        // Lock to 0° when button is held
-        OIController.driveLock0()
-                .whileTrue(DriveCommands.joystickDriveAtAngle(
-                        drive,
-                        () -> -OIController.driveTranslationY().getAsDouble(),
-                        () -> -OIController.driveTranslationX().getAsDouble(),
-                        () -> new Rotation2d()));
+        // // Lock to 0° when button is held
+        // OIController.driveLock0()
+        //         .whileTrue(DriveCommands.joystickDriveAtAngle(
+        //                 drive,
+        //                 () -> -OIController.driveTranslationY().getAsDouble(),
+        //                 () -> -OIController.driveTranslationX().getAsDouble(),
+        //                 () -> new Rotation2d()));
 
         OIController.spinUpShooter()
                 .whileTrue(
@@ -241,7 +241,7 @@ public class RobotContainer {
         OIController.zeroDrivebase().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
         // OIController.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
-        OIController.intake().whileTrue(intake.intakeRollerCommand());
+        OIController.intake().whileTrue(intake.intakeCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
         OIController.zeroIntake().onTrue(intake.zeroExtender());
         OIController.toggleIntakeState().onTrue(intake.toggleIntake()).onFalse(intake.toggleIntake());

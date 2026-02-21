@@ -35,17 +35,17 @@ public class OIXbox implements OI {
     // Operator Bumpers and Triggers
 
     public static final Trigger operatorLeftBumper =
-            new JoystickButton(driverController, XboxController.Button.kLeftBumper.value);
+            new JoystickButton(operatorController, XboxController.Button.kLeftBumper.value);
     public static final Trigger operatorRightBumper =
-            new JoystickButton(driverController, XboxController.Button.kRightBumper.value);
+            new JoystickButton(operatorController, XboxController.Button.kRightBumper.value);
     public static final DoubleSupplier operatorLeftTrigger =
-            () -> driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value);
+            () -> operatorController.getRawAxis(XboxController.Axis.kLeftTrigger.value);
     public static final DoubleSupplier operatorRightTrigger =
-            () -> driverController.getRawAxis(XboxController.Axis.kRightTrigger.value);
+            () -> operatorController.getRawAxis(XboxController.Axis.kRightTrigger.value);
     public static final Trigger operatorLeftTriggerAsButton =
-            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kLeftTrigger.value));
-    public static final Trigger operatorRightTriggerAsButton =
-            new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kRightTrigger.value));
+            new Trigger(() -> triggerThreshold < operatorController.getRawAxis(XboxController.Axis.kLeftTrigger.value));
+    public static final Trigger operatorRightTriggerAsButton = new Trigger(
+            () -> triggerThreshold < operatorController.getRawAxis(XboxController.Axis.kRightTrigger.value));
 
     // DPad
     public static final Trigger dPadUp = new POVButton(driverController, 0);
