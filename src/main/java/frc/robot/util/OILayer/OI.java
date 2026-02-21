@@ -7,8 +7,8 @@ public interface OI {
     public final Trigger noButton = new Trigger(() -> false);
     public final DoubleSupplier noAxis = () -> 0.0;
 
-    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 3, 0.02, false);
-    public final ControlCurve driveRotationCurve = new ControlCurve(1, 3, 0.02, true);
+    public final ControlCurve driveTranslationCurve = new ControlCurve(1, 2.5, 0.02, true);
+    public final ControlCurve driveRotationCurve = new ControlCurve(1, 2.5, 0.02, false);
 
     default DoubleSupplier driveTranslationX() {
         return noAxis;
@@ -66,15 +66,6 @@ public interface OI {
     /* Subsystem: Intake
     */
     default Trigger toggleIntakeState() {
-        return noButton;
-    }
-
-    // TODO:TEMPORARY:::PLEASE REMOVE
-    default Trigger extendIntake() {
-        return noButton;
-    }
-
-    default Trigger retractIntake() {
         return noButton;
     }
 
