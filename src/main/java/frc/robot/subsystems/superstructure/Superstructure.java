@@ -69,7 +69,10 @@ public class Superstructure extends SubsystemBase {
             new LoggedNetworkNumber("Shooting/RPMMultiplier", ShooterConstants.defaultRpmMultiplier);
     private static final LoggedNetworkNumber calculationMode =
             new LoggedNetworkNumber("Shooting/CalculationMode", ShooterConstants.defaultCalculationMode.ordinal());
-
+    private static final LoggedNetworkNumber manualShootingSpeedRPM =
+            new LoggedNetworkNumber("Shooting/ManualShootingSpeedRPM", ShooterConstants.manualShootingSpeedRPM);
+    private static final LoggedNetworkNumber manualShootingEnabled = new LoggedNetworkNumber(
+            "Shooting/ManualShootingEnabled", ShooterConstants.manualShootingEnabled ? 1.0 : 0.0);
     // Testing / Bench Mode
     private static final LoggedNetworkNumber benchModeEnabled =
             new LoggedNetworkNumber("Shooting/BenchMode/Enabled", ShooterConstants.defaultBenchModeEnabled);
@@ -423,5 +426,13 @@ public class Superstructure extends SubsystemBase {
 
     public boolean atTargetVelocity() {
         return shooter.getLeft().atTargetVelocity() && shooter.getRight().atTargetVelocity();
+    }
+
+    public Command autoChooseShootingCommand(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+        if (ShooterConstants.manualShootingEnabled) {
+            return runOnce(() -> setFlywheelVelocity(RPM.of(manualShootingSpeedRPM.get())));
+        } else {
+            return fullAutoAim(drive, xSupplier, ySupplier);
+        }
     }
 }

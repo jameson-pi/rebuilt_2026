@@ -64,33 +64,12 @@ public class TrajectoryBall {
                 new Rotation2d(hubPosition.getX() - robotPosition.getX(), hubPosition.getY() - robotPosition.getY());
 
         // Field-relative robot velocity
-        Rotation2d heading = robotPose.getRotation();
-        double fieldVx =
-                robotSpeeds.vxMetersPerSecond * heading.getCos() - robotSpeeds.vyMetersPerSecond * heading.getSin();
-        double fieldVy =
-                robotSpeeds.vxMetersPerSecond * heading.getSin() + robotSpeeds.vyMetersPerSecond * heading.getCos();
-
-        if (mode == CalculationMode.DOU_INTERPOLATION) {
-            // key 1: distance, key 2: radial velocity (positive = moving towards)
-            double radialVelocity = fieldVx * staticAngle.getCos() + fieldVy * staticAngle.getSin();
-            double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(staticDistance.in(Meters));
-
-            // Calculation for shot heading (same as physics mode for now)
-            // But if we are moving, we need to lead the shot.
-            // Simplified lead: v_ball_field = v_ball_robot + v_robot_field.
-            // We want v_ball_field to point towards hub.
-            // This is complex without TOF. For map mode, we'll assume the heading is hub-relative.
-            return new ShootingParameters(ShooterConstants.fixedHoodAngle, RPM.of(rpm * rpmMultiplier), staticAngle);
-        }
+        Translation2d robotVelocity = getRobotVelocity(robotPose, robotSpeeds);
 
         // 1. Initial stationary trajectory
         TrajectoryResult stationary;
         if (mode == CalculationMode.DOU_INTERPOLATION) {
-            if (hasHood) {
-                stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
-            } else {
-                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
-            }
+            stationary = calculateStationaryMap(staticDistance);
         } else {
             if (hasHood) {
                 stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
@@ -99,48 +78,49 @@ public class TrajectoryBall {
             }
         }
 
-        double t = stationary.totalTime();
-
-        if (!isSotfEnabled || robotSpeeds == null || t <= 0) {
+        if (!isSotfEnabled || robotSpeeds == null || stationary.totalTime() <= 0) {
             return finalizeParameters(
                     stationary.launchAngle, stationary.launchSpeed, staticAngle, hoodAngleOffset, rpmMultiplier);
         }
 
-        // 3. Compensation: v_ball_robot = v_ball_field - v_robot_field
-        double desiredVfx = (hubPosition.getX() - robotPosition.getX()) / t;
-        double desiredVfy = (hubPosition.getY() - robotPosition.getY()) / t;
+        TrajectoryResult compensated =
+                calculateSotf(hubPosition, robotPosition, robotVelocity, stationary, hasHood, mode, maxHeight);
 
-        double launchVxField = desiredVfx - fieldVx;
-        double launchVyField = desiredVfy - fieldVy;
+        Rotation2d targetHeading =
+                calculateTargetHeading(hubPosition, robotPosition, robotVelocity, stationary.totalTime());
 
-        double horizontalLaunchSpeed = Math.sqrt(launchVxField * launchVxField + launchVyField * launchVyField);
-
-        // 4. Vertical velocity
-        double verticalVelocity;
-        if (hasHood) {
-            // Keep the same peak height
-            double gravityMps2 = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
-            double riseMeters = maxHeight.minus(ShooterConstants.shooterHeight).in(Meters);
-            verticalVelocity = gravityMps2 * Math.sqrt(Math.max(0, 2.0 * riseMeters / gravityMps2));
-        } else {
-            // Fixed angle: v_z = v_x * tan(theta)
-            verticalVelocity = horizontalLaunchSpeed * Math.tan(ShooterConstants.fixedHoodAngle.in(Radians));
-        }
-
-        Angle launchAngle = Radians.of(Math.atan2(verticalVelocity, horizontalLaunchSpeed));
-        LinearVelocity totalLaunchSpeed = MetersPerSecond.of(
-                Math.sqrt(horizontalLaunchSpeed * horizontalLaunchSpeed + verticalVelocity * verticalVelocity));
-        Rotation2d targetHeading = new Rotation2d(launchVxField, launchVyField);
-
-        return finalizeParameters(launchAngle, totalLaunchSpeed, targetHeading, hoodAngleOffset, rpmMultiplier);
+        return finalizeParameters(
+                compensated.launchAngle, compensated.launchSpeed, targetHeading, hoodAngleOffset, rpmMultiplier);
     }
 
+    /** Calculates trajectory based on a lookup table (map) of RPM vs Distance. Assumes a fixed hood angle. */
     private static TrajectoryResult calculateStationaryMap(Distance distance) {
+        // 1. Get base RPM from interpolation map
         double rpm = ShooterConstants.distanceToAngularVelocityDouMapRPM.get(distance.in(Meters));
-        return new TrajectoryResult(
-                ShooterConstants.fixedHoodAngle, MetersPerSecond.of(ShooterConstants.flywheelRadius.in(Meters)), 1);
+        AngularVelocity flywheelVelocity = RPM.of(rpm);
+
+        // 2. Convert RPM to tangential surface speed of the flywheel
+        // v = omega * r
+        LinearVelocity tangentialVelocity =
+                MetersPerSecond.of(flywheelVelocity.in(RadiansPerSecond) * ShooterConstants.flywheelRadius.in(Meters));
+
+        // 3. Estimate launch speed using an efficiency factor (loss during transfer to ball)
+        LinearVelocity launchSpeed =
+                MetersPerSecond.of(tangentialVelocity.in(MetersPerSecond) * ShooterConstants.launchEfficiency);
+        Angle angle = ShooterConstants.fixedHoodAngle;
+
+        // 4. Calculate Time of Flight (TOF)
+        // t = distance / horizontal_velocity
+        // v_x = v * cos(theta)
+        double totalTime = distance.in(Meters) / (launchSpeed.in(MetersPerSecond) * Math.cos(angle.in(Radians)));
+
+        return new TrajectoryResult(angle, launchSpeed, totalTime);
     }
 
+    /**
+     * Calculates a stationary trajectory with a specific peak height (apex). Uses constant acceleration kinematics for
+     * projectile motion.
+     */
     private static TrajectoryResult calculateStationary(Distance distance, Distance maxHeight, Distance targetHeight) {
         Distance startHeight = ShooterConstants.shooterHeight;
         Distance riseHeight = maxHeight.minus(startHeight);
@@ -155,13 +135,20 @@ public class TrajectoryBall {
         double fallMeters = fallHeight.in(Meters);
         double distanceMeters = distance.in(Meters);
 
+        // 1. Calculate time to reach apex and time to fall to target
+        // d = 0.5 * g * t^2  => t = sqrt(2d / g)
         double timeToRise = Math.sqrt(2.0 * riseMeters / gravityMps2);
         double timeToFall = Math.sqrt(2.0 * fallMeters / gravityMps2);
         double totalTime = timeToRise + timeToFall;
 
+        // 2. Calculate required velocities
+        // Horizontal: v_x = distance / totalTime
+        // Vertical: v_y = g * timeToRise (velocity needed to reach peak height)
         double horizontalVelocity = distanceMeters / totalTime;
         double verticalVelocity = gravityMps2 * timeToRise;
 
+        // 3. Resultant launch speed and angle
+        // v = sqrt(v_x^2 + v_y^2), theta = atan2(v_y, v_x)
         Angle launchAngle = Radians.of(Math.atan2(verticalVelocity, horizontalVelocity));
         LinearVelocity launchSpeed = MetersPerSecond.of(
                 Math.sqrt(horizontalVelocity * horizontalVelocity + verticalVelocity * verticalVelocity));
@@ -169,13 +156,17 @@ public class TrajectoryBall {
         return new TrajectoryResult(launchAngle, launchSpeed, totalTime);
     }
 
+    /**
+     * Calculates required velocity for a fixed launch angle to hit a target. Uses the projectile motion equation: y =
+     * x*tan(theta) - (g*x^2) / (2*v^2*cos^2(theta))
+     */
     private static TrajectoryResult calculateFixedAngle(Distance distance, Distance targetHeight, Angle fixedAngle) {
         double d = distance.in(Meters);
         double theta = fixedAngle.in(Radians);
         double gravity = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
         double deltaH = targetHeight.minus(ShooterConstants.shooterHeight).in(Meters);
 
-        // v = sqrt( (g * d^2) / (2 * cos^2(theta) * (d * tan(theta) - deltaH)) )
+        // Solving for v: v = sqrt( (g * d^2) / (2 * cos^2(theta) * (d * tan(theta) - deltaH)) )
         double cosTheta = Math.cos(theta);
         double denominator = 2 * cosTheta * cosTheta * (d * Math.tan(theta) - deltaH);
 
@@ -189,14 +180,96 @@ public class TrajectoryBall {
         return new TrajectoryResult(fixedAngle, MetersPerSecond.of(launchSpeedMps), timeOfFlight);
     }
 
+    /** Converts robot-relative speeds and pose into field-relative velocity. */
+    private static Translation2d getRobotVelocity(Pose2d robotPose, ChassisSpeeds robotSpeeds) {
+        Rotation2d heading = robotPose.getRotation();
+        double fieldVx =
+                robotSpeeds.vxMetersPerSecond * heading.getCos() - robotSpeeds.vyMetersPerSecond * heading.getSin();
+        double fieldVy =
+                robotSpeeds.vxMetersPerSecond * heading.getSin() + robotSpeeds.vyMetersPerSecond * heading.getCos();
+        return new Translation2d(fieldVx, fieldVy);
+    }
+
+    /**
+     * Compensates for robot movement (Shooting on the Fly).
+     *
+     * <p>The goal is for the ball's FIELD-RELATIVE velocity to match what is needed for a stationary shot. We achieve
+     * this by adjusting the ROBOT-RELATIVE launch.
+     *
+     * <p>v_ball_field = v_ball_robot + v_robot_field Therefore: v_ball_robot = v_ball_field - v_robot_field
+     */
+    private static TrajectoryResult calculateSotf(
+            Translation2d hubPosition,
+            Translation2d robotPosition,
+            Translation2d robotVelocity,
+            TrajectoryResult stationary,
+            boolean hasHood,
+            CalculationMode mode,
+            Distance maxHeight) {
+
+        double t = stationary.totalTime();
+        double fieldVx = robotVelocity.getX();
+        double fieldVy = robotVelocity.getY();
+
+        // 1. Calculate required field-relative velocity to reach hub in time t
+        double desiredVfx = (hubPosition.getX() - robotPosition.getX()) / t;
+        double desiredVfy = (hubPosition.getY() - robotPosition.getY()) / t;
+
+        // 2. Calculate required robot-relative launch velocity (vector subtraction)
+        double launchVxField = desiredVfx - fieldVx;
+        double launchVyField = desiredVfy - fieldVy;
+
+        double horizontalLaunchSpeed = Math.sqrt(launchVxField * launchVxField + launchVyField * launchVyField);
+
+        // 3. Vertical velocity
+        double verticalVelocity;
+        if (hasHood && mode != CalculationMode.DOU_INTERPOLATION) {
+            // physics mode: maintain peak height (v_y doesn't change with horizontal motion)
+            double gravityMps2 = ShooterConstants.gravity.in(MetersPerSecondPerSecond);
+            double riseMeters = maxHeight.minus(ShooterConstants.shooterHeight).in(Meters);
+            verticalVelocity = gravityMps2 * Math.sqrt(Math.max(0, 2.0 * riseMeters / gravityMps2));
+        } else {
+            // fixed angle mode: v_z = horizontal_v * tan(theta)
+            // theta is the fixed launch angle from the stationary shot
+            verticalVelocity = horizontalLaunchSpeed * Math.tan(stationary.launchAngle.in(Radians));
+        }
+
+        // 4. Resultant launch speed and angle
+        Angle launchAngle = Radians.of(Math.atan2(verticalVelocity, horizontalLaunchSpeed));
+        LinearVelocity totalLaunchSpeed = MetersPerSecond.of(
+                Math.sqrt(horizontalLaunchSpeed * horizontalLaunchSpeed + verticalVelocity * verticalVelocity));
+
+        return new TrajectoryResult(launchAngle, totalLaunchSpeed, t);
+    }
+
+    /** Calculates the field-relative heading the robot should face to lead the shot. */
+    private static Rotation2d calculateTargetHeading(
+            Translation2d hubPosition, Translation2d robotPosition, Translation2d robotVelocity, double totalTime) {
+
+        double fieldVx = robotVelocity.getX();
+        double fieldVy = robotVelocity.getY();
+
+        // Vector subtraction to find the direction the ball needs to be launched relative to the robot
+        double desiredVfx = (hubPosition.getX() - robotPosition.getX()) / totalTime;
+        double desiredVfy = (hubPosition.getY() - robotPosition.getY()) / totalTime;
+
+        double launchVxField = desiredVfx - fieldVx;
+        double launchVyField = desiredVfy - fieldVy;
+
+        return new Rotation2d(launchVxField, launchVyField);
+    }
+
+    /** Applies offsets, clamps, and converts linear speed back to flywheel RPM. */
     private static ShootingParameters finalizeParameters(
             Angle launchAngle, LinearVelocity launchSpeed, Rotation2d heading, double hoodOffset, double rpmMult) {
-        // Apply offsets and clamps
+        // 1. Final hood angle with manual offset and hardware limits
         double hoodDegrees = launchAngle.in(Degrees) + hoodOffset;
         hoodDegrees = Math.max(
                 ShooterConstants.minHoodAngle.in(Degrees),
                 Math.min(ShooterConstants.maxHoodAngle.in(Degrees), hoodDegrees));
 
+        // 2. Linear speed back to RPM
+        // omega = (v / efficiency) / r
         double flywheelRadiusMeters = ShooterConstants.flywheelRadius.in(Meters);
         double angularVelRadPerSec =
                 (launchSpeed.in(MetersPerSecond) / ShooterConstants.launchEfficiency) / flywheelRadiusMeters;
