@@ -122,7 +122,10 @@ public class ExtenderIOReal implements ExtenderIO {
         inputs.isRetracted = isRetracted().getAsBoolean();
         inputs.position = getPosition();
         inputs.setpoint = setpoint;
+        inputs.velocity = extenderMotor.getVelocity().getValue();
         inputs.motorVoltage = Volts.of(extenderMotor.getMotorVoltage().getValueAsDouble());
+        inputs.motorCurrent = extenderMotor.getStatorCurrent().getValue();
+        inputs.motorTemp = extenderMotor.getDeviceTemp().getValue();
         inputs.atTarget = atTarget().getAsBoolean();
     }
 

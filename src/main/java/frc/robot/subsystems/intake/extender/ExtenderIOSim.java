@@ -1,11 +1,13 @@
 package frc.robot.subsystems.intake.extender;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.KilogramMetersSquaredPerSecond;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -161,7 +163,10 @@ public class ExtenderIOSim implements ExtenderIO {
         inputs.isRetracted = isRetracted().getAsBoolean();
         inputs.position = getPosition();
         inputs.setpoint = setpoint;
+        inputs.velocity = RadiansPerSecond.of(armSim.getVelocityRadPerSec());
         inputs.motorVoltage = Volts.of(extenderMotorSim.getMotorVoltage());
+        inputs.motorCurrent = Amps.of(armSim.getCurrentDrawAmps());
+        inputs.motorTemp = Celsius.of(25.0);
         inputs.atTarget = atTarget().getAsBoolean();
     }
 

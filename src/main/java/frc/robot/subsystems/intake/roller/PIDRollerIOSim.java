@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.roller;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -96,6 +97,7 @@ public class PIDRollerIOSim implements RollerIO {
         inputs.rollerAppliedVolts = rollerMotorSim.getMotorVoltageMeasure();
         inputs.rollerVelocity = rollerMotor.getVelocity().getValue();
         inputs.statorCurrent = rollerMotor.getStatorCurrent().getValue();
+        inputs.motorTemp = Celsius.of(25.0);
     }
 
     @Override
