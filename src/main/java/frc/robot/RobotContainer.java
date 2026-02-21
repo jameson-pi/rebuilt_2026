@@ -76,9 +76,9 @@ public class RobotContainer {
     public RobotContainer() {
         robotState = RobotState.create();
 
-        usingController = false;
+        usingController = true;
 
-        if (usingController) {
+        if (usingController && Constants.currentMode != Constants.Mode.SIM) {
             OIController = new OIXbox();
         } else {
             OIController = new OIKeyboard();

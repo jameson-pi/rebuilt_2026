@@ -34,7 +34,7 @@ public class LeftShooterConstants {
     public static final Time spinClosedLoopRamp = Seconds.of(0.05); // seconds from 0 to full throttle
 
     // Flywheel PID
-    public static final double flywheelKP = 2;
+    public static final double flywheelKP = .6;
     public static final double flywheelKI = 0.0;
     public static final double flywheelKD = 0.0;
     public static final double flywheelKV = 0.0;
