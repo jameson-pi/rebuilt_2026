@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.KilogramMetersSquaredPerSecond;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -74,8 +75,8 @@ public class ExtenderIOSim implements ExtenderIO {
                 ExtenderConstants.kGearing,
                 ExtenderConstants.kMOI.in(KilogramMetersSquaredPerSecond),
                 ExtenderConstants.kExtenderArmLength.in(Meters),
-                ExtenderConstants.kExtenderIntakeAngle.in(Radians),
                 ExtenderConstants.kExtenderStowAngle.in(Radians),
+                ExtenderConstants.kExtenderIntakeAngle.in(Radians),
                 false,
                 ExtenderConstants.kExtenderIntakeAngle.in(Radians),
                 0.0,
@@ -90,8 +91,19 @@ public class ExtenderIOSim implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        this.setpoint = position;
-        extenderMotor.setControl(new PositionVoltage(position));
+        this.setpoint = Rotations.of(Math.max(
+                ExtenderConstants.kExtenderMinAngle.in(Rotations),
+                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Rotations), position.in(Rotations))));
+        extenderMotor.setControl(new PositionVoltage(this.setpoint));
+    }
+
+    public Angle getPosition() {
+        return extenderMotor.getPosition().getValue();
+    }
+
+    public boolean isAtAngle(Angle angle) {
+        return Math.abs((getPosition().minus(angle)).in(Rotations))
+                < ExtenderConstants.kExtenderTolerance.in(Rotations);
     }
 
     @Override
@@ -111,14 +123,17 @@ public class ExtenderIOSim implements ExtenderIO {
 
     @Override
     public BooleanSupplier isExtended() {
-        return () -> armSim.hasHitUpperLimit();
+        return () -> isAtAngle(ExtenderConstants.kExtenderIntakeAngle);
+    }
+
+    @Override
+    public BooleanSupplier isRetracted() {
+        return () -> isAtAngle(ExtenderConstants.kExtenderStowAngle);
     }
 
     @Override
     public BooleanSupplier atTarget() {
-        return () ->
-                Math.abs(extenderMotor.getPosition().getValue().minus(setpoint).in(Degrees))
-                        < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return () -> isAtAngle(setpoint);
     }
 
     @Override
@@ -133,20 +148,21 @@ public class ExtenderIOSim implements ExtenderIO {
 
     @Override
     public void toggle() {
-        if (armSim.hasHitUpperLimit()) {
+        if (isAtAngle(ExtenderConstants.kExtenderIntakeAngle)) {
             retract();
-        } else if (armSim.hasHitLowerLimit()) {
+        } else if (isAtAngle(ExtenderConstants.kExtenderStowAngle)) {
             extend();
         }
     }
 
     @Override
     public void updateInputs(ExtenderIOInputs inputs) {
-        inputs.isExtended = armSim.hasHitUpperLimit();
-        inputs.isRetracted = armSim.hasHitLowerLimit();
-        inputs.position = extenderMotor.getPosition().getValue();
+        inputs.isExtended = isExtended().getAsBoolean();
+        inputs.isRetracted = isRetracted().getAsBoolean();
+        inputs.position = getPosition();
         inputs.setpoint = setpoint;
         inputs.motorVoltage = Volts.of(extenderMotorSim.getMotorVoltage());
+        inputs.atTarget = atTarget().getAsBoolean();
     }
 
     @Override
@@ -155,7 +171,7 @@ public class ExtenderIOSim implements ExtenderIO {
         armSim.update(TimedRobot.kDefaultPeriod);
         extenderMotor.setPosition(Radians.of(armSim.getAngleRads()));
 
-        armLigament.setAngle(extenderMotor.getPosition().getValue());
+        armLigament.setAngle(getPosition());
         setpointArmLigament.setAngle(setpoint);
         Logger.recordOutput("Intake/2D-Simulation", armMech);
 

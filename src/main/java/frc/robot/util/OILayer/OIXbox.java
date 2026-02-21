@@ -103,17 +103,6 @@ public class OIXbox implements OI {
         return leftTriggerAsButton;
     }
 
-    // TODO:TEMPORARY:::PLEASE REMOVE
-    @Override
-    public Trigger extendIntake() {
-        return noButton;
-    }
-
-    @Override
-    public Trigger retractIntake() {
-        return noButton;
-    }
-
     @Override
     public Trigger zeroIntake() {
         return x;

@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -204,6 +205,14 @@ public class LeftShooterIOKrakenX60 implements LeftShooterIO {
     public void setFlywheelVelocity(AngularVelocity velocity) {
         flywheelMotor.setControl(new VelocityVoltage(velocity));
 
+        if (flywheelFollower != null) {
+            flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        }
+    }
+
+    @Override
+    public void setFlywheelVoltage(Voltage voltage) {
+        flywheelMotor.setControl(new VoltageOut(voltage));
         if (flywheelFollower != null) {
             flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }

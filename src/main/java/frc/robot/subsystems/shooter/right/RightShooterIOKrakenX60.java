@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -24,9 +25,6 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
     private final TunableTalonFX flywheelMotor;
     private final TunableTalonFX flywheelFollower;
     private final TunableTalonFX spinMotor;
-
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
-    private final VelocityVoltage spinVelocityRequest = new VelocityVoltage(0.0);
 
     private final StatusSignal<AngularVelocity> flywheelVelocity;
     private final StatusSignal<Voltage> flywheelAppliedVolts;
@@ -205,6 +203,18 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
     @Override
     public void setFlywheelVelocity(AngularVelocity velocity) {
         flywheelMotor.setControl(new VelocityVoltage(velocity));
+
+        if (flywheelFollower != null) {
+            flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        }
+    }
+
+    @Override
+    public void setFlywheelVoltage(Voltage voltage) {
+        flywheelMotor.setControl(new VoltageOut(voltage));
+        if (flywheelFollower != null) {
+            flywheelFollower.setControl(new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        }
     }
 
     @Override

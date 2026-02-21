@@ -1,7 +1,6 @@
 package frc.robot.subsystems.intake.roller;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -12,6 +11,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
@@ -43,7 +43,12 @@ public class RollerIOSim implements RollerIO {
         intakeMotorSim = rollerMotor.getSimState();
         intakeMotorSim.setMotorType(MotorType.KrakenX60);
         intakeSim = IntakeSimulation.OverTheBumperIntake(
-                "Fuel", driveSim, Inches.of(24), Inches.of(10), IntakeSimulation.IntakeSide.FRONT, 99);
+                "Fuel",
+                driveSim,
+                IntakeConstants.kIntakeWidth,
+                IntakeConstants.kIntakeExtension,
+                IntakeConstants.kIntakeSide,
+                IntakeConstants.kIntakeCapacity);
     }
 
     public void setRollerSpeed(double speed) {

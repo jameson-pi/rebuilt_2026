@@ -2,10 +2,12 @@ package frc.robot.subsystems.shooter.right;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -17,6 +19,7 @@ public class RightShooter extends SubsystemBase {
     private final RightShooterIO io;
     private final RightShooterIOInputsAutoLogged inputs = new RightShooterIOInputsAutoLogged();
 
+    private final SysIdRoutine sysIdRoutine;
     // Tunable spin ratio
     private final LoggedNetworkNumber spinRatio =
             new LoggedNetworkNumber("RightShooter/SpinRatio", RightShooterConstants.defaultSpinRatio);
@@ -33,6 +36,14 @@ public class RightShooter extends SubsystemBase {
 
     public RightShooter(RightShooterIO io) {
         this.io = io;
+        sysIdRoutine = new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        null, // Use default ramp rate (1 V/s)
+                        Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                        null, // Use default timeout (10 s)
+                        // Log state with Phoenix SignalLogger class
+                        (state) -> SignalLogger.writeString("state", state.toString())),
+                new SysIdRoutine.Mechanism(io::setFlywheelVoltage, null, this));
     }
 
     @Override
@@ -90,6 +101,14 @@ public class RightShooter extends SubsystemBase {
         io.stop();
     }
 
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
+    }
+
     /** Get current flywheel velocity. */
     public AngularVelocity getFlywheelVelocity() {
         return inputs.flywheelVelocity;
@@ -114,7 +133,7 @@ public class RightShooter extends SubsystemBase {
     // ========== Command Factory Methods ==========
 
     public Command spinUpFlywheels(AngularVelocity velocity) {
-        return Commands.run(() -> setFlywheelVelocity(velocity), this).withName("RightSpinUp");
+        return Commands.runOnce(() -> setFlywheelVelocity(velocity), this).withName("RightSpinUp");
     }
 
     public Command spinUpFlywheels(Supplier<AngularVelocity> velocitySupplier) {

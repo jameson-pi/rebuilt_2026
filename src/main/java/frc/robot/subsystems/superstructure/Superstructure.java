@@ -40,7 +40,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.left.LeftShooter;
 import frc.robot.subsystems.shooter.right.RightShooter;
-import frc.robot.subsystems.state.RobotState;
 import frc.robot.subsystems.upgoer.Upgoer;
 import frc.robot.subsystems.upgoer.UpgoerConstants;
 import frc.robot.subsystems.upgoer.UpgoerIO;
@@ -98,20 +97,20 @@ public class Superstructure extends SubsystemBase {
 
         switch (Constants.currentMode) {
             case REAL:
-                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOKrakenX60() : null;
+                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOKrakenX60() : new HoodIO() {};
                 upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOKrakenX60() : new UpgoerIO() {};
                 break;
             case SIM:
-                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOSim() : null;
+                hoodIO = Constants.EnabledSubsystems.kHood ? new HoodIOSim() : new HoodIO() {};
                 upgoerIO = Constants.EnabledSubsystems.kUpgoer ? new UpgoerIOSim() : new UpgoerIO() {};
                 break;
             default:
-                hoodIO = null;
+                hoodIO = new HoodIO() {};
                 upgoerIO = new UpgoerIO() {};
                 break;
         }
 
-        this.hood = hoodIO != null ? new Hood(hoodIO) : null;
+        this.hood = new Hood(hoodIO);
         this.upgoer = new Upgoer(upgoerIO);
     }
 
@@ -196,7 +195,7 @@ public class Superstructure extends SubsystemBase {
 
     public Command createShooterCalibrationCommand(
             SwerveDriveSimulation driveSimulation, Consumer<Pose2d> poseResetter) {
-        if (gamePieceTrajectorySimulation == null || hood == null || driveSimulation == null) {
+        if (gamePieceTrajectorySimulation == null || !Constants.EnabledSubsystems.kHood || driveSimulation == null) {
             return null;
         }
 
@@ -221,11 +220,11 @@ public class Superstructure extends SubsystemBase {
     }
 
     public boolean hasHood() {
-        return hood != null;
+        return !Constants.EnabledSubsystems.kHood;
     }
 
     public Angle getHoodAngle() {
-        return hood != null ? hood.getAngle() : ShooterConstants.fixedHoodAngle;
+        return !Constants.EnabledSubsystems.kHood ? hood.getAngle() : ShooterConstants.fixedHoodAngle;
     }
 
     public void setHoodAngle(Angle angle) {
@@ -306,10 +305,6 @@ public class Superstructure extends SubsystemBase {
 
     /** Command that continuously updates hood angle and flywheel speed based on distance to hub. */
     public Command autoSpeedShooter(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> velocitySupplier) {
-        var requirements = hood != null
-                ? new SubsystemBase[] {hood, shooter.getLeft(), shooter.getRight()}
-                : new SubsystemBase[] {shooter.getLeft(), shooter.getRight()};
-
         return Commands.run(
                         () -> {
                             Pose2d robotPose;
@@ -364,7 +359,9 @@ public class Superstructure extends SubsystemBase {
                                 stopShooter();
                             }
                         },
-                        requirements)
+                        hood,
+                        shooter.getLeft(),
+                        shooter.getRight())
                 .withName("AutoAimShooter");
     }
 
