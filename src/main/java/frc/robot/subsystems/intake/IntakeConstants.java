@@ -70,4 +70,6 @@ public class IntakeConstants {
             public static final Current kStatorCurrentLimit = Amps.of(40);
         }
     }
+
+    public static final boolean disabled = false;
 }
