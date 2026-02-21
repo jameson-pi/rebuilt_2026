@@ -106,19 +106,6 @@ public class Intake extends SubsystemBase {
         extender.updateInputs(extenderInputs);
         extender.periodic();
         roller.periodic();
-
-        Logger.recordOutput("Intake/Roller/Velocity", rollerInputs.rollerVelocity);
-        Logger.recordOutput("Intake/Roller/SpeedPercentile", rollerInputs.rollerSpeedPercentile);
-        Logger.recordOutput("Intake/Roller/Voltage", rollerInputs.rollerAppliedVolts);
-        Logger.recordOutput("Intake/Roller/Current", rollerInputs.statorCurrent);
-
-        Logger.recordOutput("Intake/Extender/Position", extenderInputs.position);
-        Logger.recordOutput("Intake/Extender/Setpoint", extenderInputs.setpoint);
-        Logger.recordOutput("Intake/Extender/MotorVoltage", extenderInputs.motorVoltage);
-        Logger.recordOutput("Intake/Extender/IsExtended", extenderInputs.isExtended);
-        Logger.recordOutput("Intake/Extender/IsRetracted", extenderInputs.isRetracted);
-        Logger.recordOutput("Intake/Extender/atTarget", extenderInputs.atTarget);
-
         Logger.recordOutput(
                 "Intake/CurrentCommand",
                 this.getCurrentCommand() != null ? this.getCurrentCommand().getName() : "None");
