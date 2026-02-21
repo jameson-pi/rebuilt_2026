@@ -82,7 +82,7 @@ public class Module {
     }
 
     public void runCharacterizationTurning(double output) {
-        io.setDriveOpenLoop(0);
+        io.setTurnOpenLoop(0);
         io.setTurnOpenLoop(output);
     }
 
