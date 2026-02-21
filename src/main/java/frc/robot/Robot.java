@@ -14,6 +14,8 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -33,6 +35,7 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         // Set up data receivers & replay source
+
         switch (Constants.currentMode) {
             case REAL:
                 // Running on a real robot, log to a USB stick ("/U/logs")
@@ -47,6 +50,7 @@ public class Robot extends LoggedRobot {
         }
 
         SignalLogger.setPath("/home/lvuser/logs/");
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         // Start AdvantageKit logger
         Logger.start();

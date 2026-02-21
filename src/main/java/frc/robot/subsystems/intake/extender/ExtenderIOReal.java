@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake.extender;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -64,8 +63,7 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public boolean isAtAngle(Angle angle) {
-        return Math.abs((getPosition().minus(angle)).in(Degrees))
-                < ExtenderConstants.kExtenderTolerance.in(Degrees);
+        return Math.abs((getPosition().minus(angle)).in(Degrees)) < ExtenderConstants.kExtenderTolerance.in(Degrees);
     }
 
     @Override
