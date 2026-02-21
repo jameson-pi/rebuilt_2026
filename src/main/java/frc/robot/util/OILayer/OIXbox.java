@@ -95,7 +95,7 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger intake() {
-        return rightTriggerAsButton;
+        return leftBumper;
     }
 
     @Override
