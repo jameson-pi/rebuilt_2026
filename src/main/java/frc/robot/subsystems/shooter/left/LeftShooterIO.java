@@ -27,7 +27,8 @@ public interface LeftShooterIO {
 
     /** Set spin motor velocity. */
     default void setSpinVelocity(AngularVelocity velocity) {}
-
+    /** Set flywheel voltage. */
+    default void setFlywheelVoltage(Voltage voltage) {}
     /** Stop all motors. */
     default void stop() {}
 }

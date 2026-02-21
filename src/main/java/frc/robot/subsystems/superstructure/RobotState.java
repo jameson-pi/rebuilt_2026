@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.state;
+package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -79,6 +79,10 @@ public class RobotState extends SubsystemBase {
 
     public Mode getMode() {
         return mode;
+    }
+
+    public Zone getFieldZone() {
+        return fieldZone;
     }
 
     public boolean isClimbing() {

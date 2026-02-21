@@ -36,7 +36,7 @@ import frc.robot.subsystems.intake.extender.ExtenderIOSim;
 import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOReal;
 import frc.robot.subsystems.intake.roller.RollerIOSim;
-import frc.robot.subsystems.state.RobotState;
+import frc.robot.subsystems.superstructure.RobotState;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.OILayer.OI;
@@ -76,7 +76,7 @@ public class RobotContainer {
     public RobotContainer() {
         robotState = RobotState.create();
 
-        usingController = true;
+        usingController = false;
 
         if (usingController) {
             OIController = new OIXbox();
@@ -89,13 +89,23 @@ public class RobotContainer {
                 intake = new Intake(
                         Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
                         Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
-                drive = new Drive(
-                        new GyroIO() {},
-                        new ModuleIO() {},
-                        new ModuleIO() {},
-                        new ModuleIO() {},
-                        new ModuleIO() {},
-                        (pose) -> {});
+                if (Constants.EnabledSubsystems.kDrive) {
+                    drive = new Drive(
+                            new GyroIOPigeon2(),
+                            new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
+                            new ModuleIOTalonFXReal(TunerConstants.FrontRight),
+                            new ModuleIOTalonFXReal(TunerConstants.BackLeft),
+                            new ModuleIOTalonFXReal(TunerConstants.BackRight),
+                            (pose) -> {});
+                } else {
+                    drive = new Drive(
+                            new GyroIO() {},
+                            new ModuleIO() {},
+                            new ModuleIO() {},
+                            new ModuleIO() {},
+                            new ModuleIO() {},
+                            (pose) -> {});
+                }
                 vision = new Vision(drive);
                 driveSimulation = null;
                 break;
@@ -169,6 +179,18 @@ public class RobotContainer {
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kForward))
                         .andThen(Commands.waitSeconds(1))
                         .andThen(drive.sysIdQuasistaticTurning(SysIdRoutine.Direction.kReverse))
+                        .andThen(SignalLogger::stop));
+        autoChooser.addOption(
+                "Left Shooter Flywheel Characterization All",
+                superstructure
+                        .getLeftShooter()
+                        .sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(superstructure.getLeftShooter().sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(superstructure.getLeftShooter().sysIdDynamic(SysIdRoutine.Direction.kForward))
+                        .andThen(Commands.waitSeconds(1))
+                        .andThen(superstructure.getLeftShooter().sysIdDynamic(SysIdRoutine.Direction.kReverse))
                         .andThen(SignalLogger::stop));
 
         // Configure the button bindings
