@@ -26,7 +26,7 @@ public class ShooterConstants {
 
     public static final CalculationMode defaultCalculationMode = CalculationMode.DOU_INTERPOLATION;
     public static final boolean manualShootingEnabled = true;
-    public static final int manualShootingSpeedRPM = 3000;
+    public static final int manualShootingSpeedRPM = 5000;
 
     /** Fixed hood angle to use when hood is disabled (degrees) */
     public static final Angle fixedHoodAngle = Degrees.of(60);
