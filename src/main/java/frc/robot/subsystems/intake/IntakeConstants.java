@@ -53,6 +53,7 @@ public class IntakeConstants {
         public static final Angle kExtenderTolerance = Rotations.of(0.3);
         public static final Angle kExtenderSiftAngleOne = Rotations.of(2.3);
         public static final Angle kExtenderSiftAngleTwo = Rotations.of(0.2);
+        public static final double kgearing = 30;
 
         public static class PIDF {
             public static final double kP = 7.0;
