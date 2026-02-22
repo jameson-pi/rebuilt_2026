@@ -29,8 +29,6 @@ public class PIDRollerIOReal implements RollerIO {
 
         rollerMotorConfig = new TalonFXConfiguration();
         rollerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = RollerConstants.MotorConfig.kRampPeriod;
-        rollerMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = RollerConstants.MotorConfig.kPeakForwardTorque;
-        rollerMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = RollerConstants.MotorConfig.kPeakReverseTorque;
         rollerMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 

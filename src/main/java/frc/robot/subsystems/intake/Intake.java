@@ -93,7 +93,11 @@ public class Intake extends SubsystemBase {
 
     // Utility Commands
     public Command zeroExtender() {
-        return runOnce(() -> extender.zero());
+        return runOnce(extender::zero);
+    }
+
+    public boolean isRollerRunning() {
+        return Math.abs(rollerInputs.rollerSpeedPercentile) > 0.1;
     }
 
     @Override
@@ -107,14 +111,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/Roller/SpeedPercentile", rollerInputs.rollerSpeedPercentile);
         Logger.recordOutput("Intake/Roller/Voltage", rollerInputs.rollerAppliedVolts);
         Logger.recordOutput("Intake/Roller/Current", rollerInputs.statorCurrent);
-        Logger.recordOutput("Intake/Roller/Temperature", rollerInputs.motorTemp);
 
         Logger.recordOutput("Intake/Extender/Position", extenderInputs.position);
         Logger.recordOutput("Intake/Extender/Setpoint", extenderInputs.setpoint);
-        Logger.recordOutput("Intake/Extender/Velocity", extenderInputs.velocity);
         Logger.recordOutput("Intake/Extender/MotorVoltage", extenderInputs.motorVoltage);
-        Logger.recordOutput("Intake/Extender/Current", extenderInputs.motorCurrent);
-        Logger.recordOutput("Intake/Extender/Temperature", extenderInputs.motorTemp);
         Logger.recordOutput("Intake/Extender/IsExtended", extenderInputs.isExtended);
         Logger.recordOutput("Intake/Extender/IsRetracted", extenderInputs.isRetracted);
         Logger.recordOutput("Intake/Extender/atTarget", extenderInputs.atTarget);

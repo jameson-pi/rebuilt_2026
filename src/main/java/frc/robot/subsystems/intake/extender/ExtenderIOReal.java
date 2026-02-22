@@ -37,12 +37,10 @@ public class ExtenderIOReal implements ExtenderIO {
 
         currentConfig = new CurrentLimitsConfigs();
         currentConfig.StatorCurrentLimitEnable = true;
-        currentConfig.StatorCurrentLimit = ExtenderConstants.MotorConfig.kStatorCurrentLimit.in(Amps);
+        currentConfig.StatorCurrentLimit = ExtenderConstants.MotorConfig.kStatorCurrentLimitExtender.in(Amps);
 
         extenderMotorConfig = new TalonFXConfiguration();
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ExtenderConstants.MotorConfig.kRampPeriod;
-        extenderMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = ExtenderConstants.MotorConfig.kPeakForwardTorque;
-        extenderMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = ExtenderConstants.MotorConfig.kPeakReverseTorque;
         extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         extenderMotorConfig.Feedback.SensorToMechanismRatio = ExtenderConstants.kGearing;
