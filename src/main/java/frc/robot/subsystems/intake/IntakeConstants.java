@@ -44,14 +44,13 @@ public class IntakeConstants {
         public static final AngularMomentum kMOI = KilogramMetersSquaredPerSecond.of(0.5);
         public static final Distance kExtenderArmLength = Inches.of(12.0);
 
-        public static final Angle kExtenderStowAngle = Rotations.of(0.0);
-        public static final Angle kExtenderIntakeAngle = Rotations.of(2.7);
-        public static final Angle kExtenderMaxAngle = Rotations.of(2.5);
-        public static final Angle kExtenderMinAngle = Rotations.of(0.0);
-        public static final Angle kExtenderTolerance = Rotations.of(0.3);
-        public static final Angle kExtenderSiftAngleOne = Rotations.of(2.3);
-        public static final Angle kExtenderSiftAngleTwo = Rotations.of(0.2);
-        public static final double kgearing = 30;
+        public static final Angle kExtenderStowAngle = Degrees.of(0.0);
+        public static final Angle kExtenderIntakeAngle = Degrees.of(972.0);
+        public static final Angle kExtenderMaxAngle = Degrees.of(900.0);
+        public static final Angle kExtenderMinAngle = Degrees.of(0.0);
+        public static final Angle kExtenderTolerance = Degrees.of(108.0);
+        public static final Angle kExtenderSiftAngleOne = Degrees.of(828.0);
+        public static final Angle kExtenderSiftAngleTwo = Degrees.of(72.0);
 
         public static class PIDF {
             public static final double kP = 7.0;
