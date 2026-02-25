@@ -25,7 +25,10 @@ public class IndexerIOReal implements IndexerIO {
         indexerPIDConfigs.kI = IndexerConstants.PID.kI;
         indexerPIDConfigs.kD = IndexerConstants.PID.kD;
         indexerMotor = new TunableTalonFX(
-                Constants.CANIDs.MotorIDs.kIndexerMotorID, IndexerConstants.canBus, "Indexer/IndexerMotor", indexerPIDConfigs);
+                Constants.CANIDs.MotorIDs.kIndexerMotorID,
+                IndexerConstants.canBus,
+                "Indexer/IndexerMotor",
+                indexerPIDConfigs);
         indexerMotorConfig = new TalonFXConfiguration();
 
         indexerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod =

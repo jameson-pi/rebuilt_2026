@@ -28,8 +28,8 @@ public class IndexerIOSim implements IndexerIO {
         var plant = LinearSystemId.createFlywheelSystem(MOTOR, ROLLER_MOI, ROLLER_GEARING);
         sim = new FlywheelSim(plant, MOTOR);
 
-        controller = new PIDController(
-                IndexerConstants.SimPID.kP, IndexerConstants.SimPID.kI, IndexerConstants.SimPID.kD);
+        controller =
+                new PIDController(IndexerConstants.SimPID.kP, IndexerConstants.SimPID.kI, IndexerConstants.SimPID.kD);
 
         double freeSpeedRPM = MOTOR.freeSpeedRadPerSec * 60.0 / (2.0 * Math.PI);
         double kv = 12.0 / freeSpeedRPM;
@@ -53,11 +53,9 @@ public class IndexerIOSim implements IndexerIO {
         double backEmf = velocityRadPerSec * (12.0 / MOTOR.freeSpeedRadPerSec);
         double motorResistance = 12.0 / MOTOR.stallCurrentAmps;
         double vMax = Math.min(
-                12.0,
-                backEmf + IndexerConstants.MotorConfigurationConfigs.PeakForwardTorqueCurrent * motorResistance);
+                12.0, backEmf + IndexerConstants.MotorConfigurationConfigs.PeakForwardTorqueCurrent * motorResistance);
         double vMin = Math.max(
-                -12.0,
-                backEmf - IndexerConstants.MotorConfigurationConfigs.PeakReverseTorqueCurrent * motorResistance);
+                -12.0, backEmf - IndexerConstants.MotorConfigurationConfigs.PeakReverseTorqueCurrent * motorResistance);
         return MathUtil.clamp(desiredVolts, vMin, vMax);
     }
 
