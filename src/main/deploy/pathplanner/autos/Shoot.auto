@@ -5,15 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "Drive in front of hub"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Retreat from hub"
           }
         }
       ]

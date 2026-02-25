@@ -18,6 +18,7 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -150,7 +151,15 @@ public class RobotContainer {
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
+        NamedCommands.registerCommand(
+                "Shoot",
+                Commands.deadline(
+                        Commands.run(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)))
+                                .andThen(superstructure.fireCommand()),
+                        Commands.waitSeconds(5)));
 
+        NamedCommands.registerCommand(
+                "Intake", Commands.deadline(Commands.run(() -> intake.intakeCommand()), Commands.waitSeconds(6)));
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         if (Constants.currentMode == Constants.Mode.SIM) {
