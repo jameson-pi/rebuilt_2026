@@ -1,6 +1,6 @@
 package frc.robot.subsystems.indexer;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -9,7 +9,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 public class IndexerConstants {
 
     public static final double kCollectorSpeed = 0.5; // Adjust speed as needed
-    public static final AngularVelocity kCollectorRPM = RotationsPerSecond.of(300); // Adjust RPM as needed
+    public static final AngularVelocity kCollectorRPM = RPM.of(300); // Adjust RPM as needed
 
     public static final String canBus = "rio";
 

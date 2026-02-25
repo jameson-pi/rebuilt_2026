@@ -12,8 +12,6 @@ import frc.robot.util.TunableTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class IndexerIOReal implements IndexerIO {
-    private final Slot0Configs indexerMotorPIDConfig = new Slot0Configs();
-
     private final TunableTalonFX indexerMotor;
     private final LoggedNetworkNumber indexerMotorOutput;
     private final LoggedNetworkNumber indexerMotorReverseOutput;
@@ -27,7 +25,7 @@ public class IndexerIOReal implements IndexerIO {
         indexerPIDConfigs.kI = IndexerConstants.PID.kI;
         indexerPIDConfigs.kD = IndexerConstants.PID.kD;
         indexerMotor = new TunableTalonFX(
-                Constants.CANIDs.MotorIDs.kIndexerMotorID, IndexerConstants.canBus, "Indexer/IndexerMotor");
+                Constants.CANIDs.MotorIDs.kIndexerMotorID, IndexerConstants.canBus, "Indexer/IndexerMotor", indexerPIDConfigs);
         indexerMotorConfig = new TalonFXConfiguration();
 
         indexerMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod =
@@ -38,8 +36,8 @@ public class IndexerIOReal implements IndexerIO {
                 IndexerConstants.MotorConfigurationConfigs.PeakReverseTorqueCurrent;
         indexerMotorConfig.MotorOutput.Inverted = IndexerConstants.MotorConfigurationConfigs.MotorInverted;
         indexerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // Configure TalonFX settings here if needed
-        indexerMotor.getConfigurator().apply(indexerMotorConfig);
+        indexerMotorConfig.Slot0 = indexerPIDConfigs;
+        indexerMotor.applyConfiguration(indexerMotorConfig);
 
         indexerMotorOutput = new LoggedNetworkNumber("Indexer/IndexerMotorOutput", IndexerConstants.kCollectorSpeed);
         indexerMotorReverseOutput = new LoggedNetworkNumber("Indexer/IndexerMotorReverseOutput", 0);

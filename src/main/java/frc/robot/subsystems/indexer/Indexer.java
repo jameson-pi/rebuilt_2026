@@ -1,20 +1,35 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.*;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.indexer.IndexerIO.IndexerIOInputs;
+import org.littletonrobotics.junction.Logger;
 
 public class Indexer extends SubsystemBase {
-    private IndexerIO indexerIO;
-    private IndexerIOInputs indexerInputs;
+    private final IndexerIO indexerIO;
+    private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
+
+    private AngularVelocity setpoint = RotationsPerSecond.of(0);
 
     public Indexer(IndexerIO indexerIO) {
         this.indexerIO = indexerIO;
-        this.indexerInputs = new IndexerIO.IndexerIOInputs();
+    }
+
+    @Override
+    public void periodic() {
+        indexerIO.updateInputs(inputs);
+        Logger.processInputs("Indexer", inputs);
+        Logger.recordOutput("Indexer/Setpoint", setpoint);
+        Logger.recordOutput("Indexer/Running", Math.abs(setpoint.in(RotationsPerSecond)) > 0.1);
     }
 
     public Command index() {
-        return runOnce(() -> indexerIO.setVelocity(IndexerConstants.kCollectorRPM));
+        return runOnce(() -> {
+            setpoint = IndexerConstants.kCollectorRPM;
+            indexerIO.setVelocity(IndexerConstants.kCollectorRPM);
+        });
     }
 
     public Command setCustomSpeed(double speed) {
@@ -22,23 +37,26 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command indexReverse() {
-        return runOnce(() -> indexerIO.setVelocity(IndexerConstants.kCollectorRPM.times(-1)));
+        return runOnce(() -> {
+            setpoint = IndexerConstants.kCollectorRPM.times(-1);
+            indexerIO.setVelocity(IndexerConstants.kCollectorRPM.times(-1));
+        });
     }
 
     public Command stop() {
-        return runOnce(() -> indexerIO.stop());
+        return runOnce(() -> {
+            setpoint = RotationsPerSecond.of(0);
+            indexerIO.stop();
+        });
     }
 
     public void setRunning(boolean running) {
         if (running) {
+            setpoint = IndexerConstants.kCollectorRPM;
             indexerIO.setVelocity(IndexerConstants.kCollectorRPM);
         } else {
+            setpoint = RotationsPerSecond.of(0);
             indexerIO.stop();
         }
-    }
-
-    @Override
-    public void periodic() {
-        indexerIO.updateInputs(indexerInputs);
     }
 }
