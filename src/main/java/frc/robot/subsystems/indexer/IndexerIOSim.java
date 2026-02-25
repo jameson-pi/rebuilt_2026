@@ -63,7 +63,7 @@ public class IndexerIOSim implements IndexerIO {
     public void setCustomSpeed(double speed) {
         appliedVolts = currentLimitedVoltage(speed * 12.0);
         sim.setInputVoltage(appliedVolts);
-        sim.update(0.02);
+        sim.update(0.02); // 0.02 can become TimedRobot.kDefaultPeriod
     }
 
     @Override
@@ -73,7 +73,7 @@ public class IndexerIOSim implements IndexerIO {
         appliedVolts = currentLimitedVoltage(ff + fb);
 
         sim.setInputVoltage(appliedVolts);
-        sim.update(0.02);
+        sim.update(0.02); // 0.02 can become TimedRobot.kDefaultPeriod
 
         indexerInputs.motorOutput = Volts.of(appliedVolts);
         indexerInputs.motorVelocity = RPM.of(sim.getAngularVelocityRPM());
