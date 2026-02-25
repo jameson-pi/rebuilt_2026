@@ -50,14 +50,18 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        this.setpoint = Degrees.of(Math.max(
-                ExtenderConstants.kExtenderMinAngle.in(Degrees),
-                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Degrees), position.in(Degrees))));
-        extenderMotor.setControl(new PositionVoltage(this.setpoint));
+        if (position.lt(ExtenderConstants.kExtenderMinAngle)) {
+            this.setpoint = ExtenderConstants.kExtenderMinAngle;
+        } else if (position.gt(ExtenderConstants.kExtenderMaxAngle)) {
+            this.setpoint = ExtenderConstants.kExtenderMaxAngle;
+        } else {
+            this.setpoint = position;
+        }
+        extenderMotor.setControl(new PositionVoltage(setpoint));
     }
 
     public Angle getPosition() {
-        return extenderMotor.getPosition().getValue().div(ExtenderConstants.kGearing);
+        return extenderMotor.getPosition().getValue();
     }
 
     public boolean isAtAngle(Angle angle) {

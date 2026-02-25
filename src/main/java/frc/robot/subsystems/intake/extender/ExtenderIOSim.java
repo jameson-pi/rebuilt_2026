@@ -90,10 +90,14 @@ public class ExtenderIOSim implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        this.setpoint = Degrees.of(Math.max(
-                ExtenderConstants.kExtenderMinAngle.in(Degrees),
-                Math.min(ExtenderConstants.kExtenderMaxAngle.in(Degrees), position.in(Degrees))));
-        extenderMotor.setControl(new PositionVoltage(this.setpoint));
+        if (position.lt(ExtenderConstants.kExtenderMinAngle)) {
+            this.setpoint = ExtenderConstants.kExtenderMinAngle;
+        } else if (position.gt(ExtenderConstants.kExtenderMaxAngle)) {
+            this.setpoint = ExtenderConstants.kExtenderMaxAngle;
+        } else {
+            this.setpoint = position;
+        }
+        extenderMotor.setControl(new PositionVoltage(setpoint));
     }
 
     public Angle getPosition() {
@@ -170,7 +174,7 @@ public class ExtenderIOSim implements ExtenderIO {
     public void periodic() {
         armSim.setInputVoltage(extenderMotorSim.getMotorVoltage());
         armSim.update(TimedRobot.kDefaultPeriod);
-        extenderMotor.setPosition(Radians.of(armSim.getAngleRads()));
+        extenderMotor.setPosition(armSim.getAngleRads() / (2.0 * Math.PI));
 
         armLigament.setAngle(getPosition());
         setpointArmLigament.setAngle(setpoint);
