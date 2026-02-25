@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Constants.FieldConstants;
+import frc.robot.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ShooterCalibrationCommand;
 import frc.robot.subsystems.drive.Drive;
@@ -290,15 +290,15 @@ public class Superstructure extends SubsystemBase {
     /** Calculate the angle from the robot to the alliance wall center. */
     public Rotation2d getAngleToAllianceWall(Pose2d robotPose) {
         boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
-        double targetX = isRed ? FieldConstants.FIELD_LENGTH.in(Meters) : 0.0;
-        double targetY = FieldConstants.FIELD_WIDTH.in(Meters) / 2.0;
+        double targetX = isRed ? FieldConstants.fieldLength : 0.0;
+        double targetY = FieldConstants.fieldWidth / 2.0;
         Translation2d target = new Translation2d(targetX, targetY);
         Translation2d toTarget = target.minus(robotPose.getTranslation());
         return new Rotation2d(toTarget.getX(), toTarget.getY());
     }
 
     public boolean isInShootingZone(Pose2d robotPose) {
-        double fieldLengthMeters = FieldConstants.FIELD_LENGTH.in(Meters);
+        double fieldLengthMeters = FieldConstants.fieldLength;
         double xMeters = robotPose.getTranslation().getX();
         boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
         double distanceFromOwnWall = isRed ? fieldLengthMeters - xMeters : xMeters;

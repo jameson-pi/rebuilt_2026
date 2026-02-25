@@ -28,7 +28,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.Constants.FieldConstants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.left.LeftShooter;
@@ -102,8 +102,8 @@ public class ShooterCalibrationCommand extends Command {
     // Hub scoring detection
     private Translation2d hubPosition;
     private static final double HUB_RADIUS =
-            FieldConstants.HUB_OPENING_DIAMETER.in(Meters) / 2.0 / 6; // Use quarter the radius to be conservative
-    private static final double HUB_HEIGHT = FieldConstants.HUB_OPENING_HEIGHT.in(Meters);
+            FieldConstants.Hub.innerWidth / 2.0 / 6; // Use quarter the radius to be conservative
+    private static final double HUB_HEIGHT = FieldConstants.Hub.height;
 
     // Shot result tracking (for early termination)
     private ShotResult lastShotResult = ShotResult.PENDING;
