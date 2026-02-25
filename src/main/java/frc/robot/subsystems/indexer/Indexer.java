@@ -26,7 +26,7 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command index() {
-        return runOnce(() -> {
+        return run(() -> {
             setpoint = IndexerConstants.kCollectorRPM;
             indexerIO.setVelocity(IndexerConstants.kCollectorRPM);
         });
@@ -37,7 +37,7 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command indexReverse() {
-        return runOnce(() -> {
+        return run(() -> {
             setpoint = IndexerConstants.kCollectorRPM.times(-1);
             indexerIO.setVelocity(IndexerConstants.kCollectorRPM.times(-1));
         });
