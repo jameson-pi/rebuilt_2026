@@ -220,8 +220,9 @@ public class RobotContainer {
         //                 () -> new Rotation2d()));
 
         OIController.spinUpShooter()
-                .whileTrue(
-                        Commands.runOnce(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000))));
+                .whileTrue(Commands.runOnce(
+                        () -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)),
+                        superstructure.getLeftShooter()));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());

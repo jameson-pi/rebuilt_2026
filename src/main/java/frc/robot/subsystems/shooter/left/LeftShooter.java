@@ -129,7 +129,6 @@ public class LeftShooter extends SubsystemBase {
     public void resetFailureFlags() {
         flywheelFailed = false;
     }
-
     // ========== Command Factory Methods ==========
 
     public Command spinUpFlywheels(AngularVelocity velocity) {

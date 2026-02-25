@@ -75,7 +75,6 @@ public class ShooterCalibrationCommand extends Command {
     private final GamePieceTrajectorySimulation trajectorySim;
     private final SwerveDriveSimulation driveSim;
     private final Consumer<Pose2d> poseResetter;
-
     // Test parameters
     private final Distance[] testDistances;
     private final Angle[] testAngles;
@@ -196,7 +195,8 @@ public class ShooterCalibrationCommand extends Command {
      * @param poseResetter Consumer to reset odometry pose
      * @param testDistances Array of distances to test from
      * @param testAngles Array of hood angles to test
-     * @param testRPMs Array of flywheel RPMs to test
+     * @param lowerBound Minimum flywheel velocity to test
+     * @param upperBound Maximum flywheel velocity to test
      */
     public ShooterCalibrationCommand(
             Hood hood,

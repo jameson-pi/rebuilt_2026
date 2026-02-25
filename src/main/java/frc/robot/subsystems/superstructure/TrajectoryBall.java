@@ -278,7 +278,6 @@ public class TrajectoryBall {
         rpm = Math.max(
                 ShooterConstants.minShootingFlywheelVelocity.in(RPM),
                 Math.min(ShooterConstants.maxShootingFlywheelVelocity.in(RPM), rpm));
-
         return new ShootingParameters(Degrees.of(hoodDegrees), RPM.of(rpm), heading);
     }
 }
