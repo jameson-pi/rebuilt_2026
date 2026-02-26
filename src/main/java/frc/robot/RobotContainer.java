@@ -151,13 +151,11 @@ public class RobotContainer {
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
+        NamedCommands.registerCommand("Spin Up Shooter", superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
         NamedCommands.registerCommand(
-                "Shoot",
-                Commands.deadline(
-                        Commands.run(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)))
-                                .andThen(superstructure.fireCommand()),
-                        Commands.waitSeconds(5)));
-
+                "Spin Up Shooter and Wait", superstructure.setFlywheelVelocityAndWaitCommand(RPM.of(3600)));
+        NamedCommands.registerCommand(
+                "Shoot", Commands.deadline(superstructure.fireCommand(), Commands.waitSeconds(5)));
         NamedCommands.registerCommand(
                 "Intake", Commands.deadline(Commands.run(() -> intake.intakeCommand()), Commands.waitSeconds(6)));
         // Set up auto routines
