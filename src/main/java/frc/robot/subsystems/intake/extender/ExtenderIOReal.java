@@ -57,7 +57,7 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public Angle getPosition() {
-        return extenderMotor.getPosition().getValue().div(ExtenderConstants.kGearing);
+        return extenderMotor.getPosition().getValue();
     }
 
     public boolean isAtAngle(Angle angle) {
@@ -108,7 +108,7 @@ public class ExtenderIOReal implements ExtenderIO {
     public void toggle() {
         if (isAtAngle(ExtenderConstants.kExtenderStowAngle)) {
             extend();
-        } else if (isAtAngle(ExtenderConstants.kExtenderIntakeAngle)) {
+        } else {
             retract();
         }
     }

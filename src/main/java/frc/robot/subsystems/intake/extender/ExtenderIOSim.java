@@ -148,7 +148,7 @@ public class ExtenderIOSim implements ExtenderIO {
     public void toggle() {
         if (isAtAngle(ExtenderConstants.kExtenderIntakeAngle)) {
             retract();
-        } else if (isAtAngle(ExtenderConstants.kExtenderStowAngle)) {
+        } else {
             extend();
         }
     }
@@ -170,7 +170,7 @@ public class ExtenderIOSim implements ExtenderIO {
     public void periodic() {
         armSim.setInputVoltage(extenderMotorSim.getMotorVoltage());
         armSim.update(TimedRobot.kDefaultPeriod);
-        extenderMotor.setPosition(Radians.of(armSim.getAngleRads()));
+        extenderMotor.setPosition(armSim.getAngleRads());
 
         armLigament.setAngle(getPosition());
         setpointArmLigament.setAngle(setpoint);

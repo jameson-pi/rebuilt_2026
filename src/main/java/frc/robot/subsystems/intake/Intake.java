@@ -17,13 +17,8 @@ public class Intake extends SubsystemBase {
     private final ExtenderIO.ExtenderIOInputs extenderInputs;
 
     public Intake(RollerIO rollerIO, ExtenderIO extenderIO) {
-        if (IntakeConstants.disabled) {
-            roller = new RollerIO() {};
-            extender = new ExtenderIO() {};
-        } else {
-            roller = rollerIO;
-            extender = extenderIO;
-        }
+        roller = rollerIO;
+        extender = extenderIO;
         rollerInputs = new RollerIOInputsAutoLogged();
         extenderInputs = new ExtenderIOInputsAutoLogged();
     }

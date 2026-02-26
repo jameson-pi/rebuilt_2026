@@ -18,6 +18,7 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -150,7 +151,13 @@ public class RobotContainer {
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
-
+        NamedCommands.registerCommand("Spin Up Shooter", superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
+        NamedCommands.registerCommand(
+                "Spin Up Shooter and Wait", superstructure.setFlywheelVelocityAndWaitCommand(RPM.of(3600)));
+        NamedCommands.registerCommand(
+                "Shoot", Commands.deadline(superstructure.fireCommand(), Commands.waitSeconds(5)));
+        NamedCommands.registerCommand(
+                "Intake", Commands.deadline(Commands.run(() -> intake.intakeCommand()), Commands.waitSeconds(6)));
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         if (Constants.currentMode == Constants.Mode.SIM) {
@@ -220,8 +227,9 @@ public class RobotContainer {
         //                 () -> new Rotation2d()));
 
         OIController.spinUpShooter()
-                .whileTrue(
-                        Commands.runOnce(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000))));
+                .whileTrue(Commands.runOnce(
+                        () -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)),
+                        superstructure.getLeftShooter()));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
