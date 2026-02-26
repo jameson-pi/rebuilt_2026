@@ -48,7 +48,7 @@ public class IndexerIOReal implements IndexerIO {
 
     @Override
     public void stop() {
-        indexerMotor.set(0);
+        indexerMotor.stopMotor();
     }
 
     @Override
