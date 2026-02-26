@@ -214,9 +214,17 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
-                OIController.driveTranslationY(),
-                OIController.driveTranslationX(),
-                OIController.driveRotation()));
+                // The lambda () -> ensures this check happens every loop
+                () -> intake.isRollerRunningSupplier().getAsBoolean()
+                        ? OIController.driveTranslationYIntakeRunning().getAsDouble()
+                        : OIController.driveTranslationY().getAsDouble(),
+
+                () -> intake.isRollerRunningSupplier().getAsBoolean()
+                        ? OIController.driveTranslationXIntakeRunning().getAsDouble()
+                        : OIController.driveTranslationX().getAsDouble(),
+
+                () -> OIController.driveRotation().getAsDouble()
+        ));
 
         // // Lock to 0° when button is held
         // OIController.driveLock0()
@@ -227,9 +235,7 @@ public class RobotContainer {
         //                 () -> new Rotation2d()));
 
         OIController.spinUpShooter()
-                .whileTrue(Commands.runOnce(
-                        () -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)),
-                        superstructure.getLeftShooter()));
+                .whileTrue(superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());

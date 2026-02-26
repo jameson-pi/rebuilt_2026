@@ -9,6 +9,8 @@ import frc.robot.subsystems.intake.roller.RollerIO;
 import frc.robot.subsystems.intake.roller.RollerIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.BooleanSupplier;
+
 public class Intake extends SubsystemBase {
 
     private final RollerIO roller;
@@ -94,7 +96,9 @@ public class Intake extends SubsystemBase {
     public boolean isRollerRunning() {
         return Math.abs(rollerInputs.rollerSpeedPercentile) > 0.1;
     }
-
+    public BooleanSupplier isRollerRunningSupplier() {
+        return this::isRollerRunning;
+    }
     @Override
     public void periodic() {
         roller.updateInputs(rollerInputs);

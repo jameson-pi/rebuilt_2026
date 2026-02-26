@@ -26,6 +26,7 @@ public final class Constants {
     public static final Mode simMode = Mode.SIM;
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+    public static final double intakingDriveSpeedMultiplier = 0.6;
     //    /** Field dimensions and hub positions for 2026 FUEL game */
     //    public static final class FieldConstants {
     //        // Standard FRC field dimensions (2026 FUEL)
