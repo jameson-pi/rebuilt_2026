@@ -87,9 +87,6 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                intake = new Intake(
-                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
-                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
                 if (Constants.EnabledSubsystems.kDrive) {
                     drive = new Drive(
                             new GyroIOPigeon2(),
@@ -107,7 +104,14 @@ public class RobotContainer {
                             new ModuleIO() {},
                             (pose) -> {});
                 }
-                vision = new Vision(drive);
+                this.vision = new Vision(
+                        drive,
+                        new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
+                        new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
+                intake = new Intake(
+                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
+                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
+
                 driveSimulation = null;
                 break;
 
@@ -129,8 +133,14 @@ public class RobotContainer {
                                 TunerConstants.BackLeft, driveSimulation.getModules()[2]),
                         new ModuleIOTalonFXSim(
                                 TunerConstants.BackRight, driveSimulation.getModules()[3]),
-                        (pose) -> driveSimulation.setSimulationWorldPose(pose));
-                vision = new Vision(drive, new VisionIOLimelight(camera0Name, drive::getRotation));
+                        driveSimulation::setSimulationWorldPose);
+                vision = new Vision(
+                        drive,
+                        new VisionIOPhotonVisionSim(
+                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                        new VisionIOPhotonVisionSim(
+                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+
                 break;
             default:
                 drive = new Drive(
@@ -146,7 +156,7 @@ public class RobotContainer {
                 break;
         }
 
-        superstructure = new Superstructure();
+        superstructure = new Superstructure(intake::isRollerRunning);
 
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);

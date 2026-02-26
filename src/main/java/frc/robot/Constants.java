@@ -64,6 +64,7 @@ public final class Constants {
         public static final boolean kRoller = false;
         public static final boolean kExtender = false;
         public static final boolean kDrive = true;
+        public static final boolean kIndexer = true;
     }
 
     public static enum Mode {
@@ -82,9 +83,12 @@ public final class Constants {
             public static final int kShooterFlywheelRightMotorCANID = 22;
             public static final int kShooterFlywheelRightFollowerCANID = 27;
             public static final int kShooterHoodMotorCANID = 23;
-            public static final int kShooterSpinMotorLeftCANID = 27; //
+            public static final int kShooterSpinMotorLeftCANID =
+                    27; // FIXME: ID overlaps with kShooterFlywheelRightFollowerCANID
             public static final int kShooterSpinMotorRightCANID = 25; // FIXME
             public static final int kUpgoerMotorCANID = 15;
+            // TODO: Update IDs
+            public static final int kIndexerMotorID = 14;
         }
 
         public static class SensorIDs {
