@@ -72,11 +72,11 @@ public class Superstructure extends SubsystemBase {
     private static final LoggedNetworkNumber rpmMultiplier =
             new LoggedNetworkNumber("Shooting/RPMMultiplier", ShooterConstants.defaultRpmMultiplier);
     private static final LoggedNetworkNumber calculationMode =
-            new LoggedNetworkNumber("Shooting/CalculationMode", ShooterConstants.defaultCalculationMode.ordinal());
+            new LoggedNetworkNumber("Shooting/CalculationMode", ShooterConstants.kDefaultCalculationMode.ordinal());
     private static final LoggedNetworkNumber manualShootingSpeedRPM =
-            new LoggedNetworkNumber("Shooting/ManualShootingSpeedRPM", ShooterConstants.manualShootingSpeedRPM);
+            new LoggedNetworkNumber("Shooting/ManualShootingSpeedRPM", ShooterConstants.kManualShootingSpeedRPM);
     private static final LoggedNetworkNumber manualShootingEnabled = new LoggedNetworkNumber(
-            "Shooting/ManualShootingEnabled", ShooterConstants.manualShootingEnabled ? 1.0 : 0.0);
+            "Shooting/ManualShootingEnabled", ShooterConstants.kManualShootingEnabled ? 1.0 : 0.0);
     // Testing / Bench Mode
     private static final LoggedNetworkNumber benchModeEnabled =
             new LoggedNetworkNumber("Shooting/BenchMode/Enabled", ShooterConstants.defaultBenchModeEnabled);
@@ -240,7 +240,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Angle getHoodAngle() {
-        return !Constants.EnabledSubsystems.kHood ? hood.getAngle() : ShooterConstants.fixedHoodAngle;
+        return !Constants.EnabledSubsystems.kHood ? hood.getAngle() : ShooterConstants.kFixedHoodAngle;
     }
 
     public void setHoodAngle(Angle angle) {
@@ -354,7 +354,7 @@ public class Superstructure extends SubsystemBase {
                                         Feet.of(targetHeightFeet.get()),
                                         hoodAngleOffset.get(),
                                         rpmMultiplier.get(),
-                                        ShooterConstants.sotfEnabled);
+                                        ShooterConstants.kSotfEnabled);
 
                                 Angle hoodAngle = params.hoodAngle();
                                 AngularVelocity flywheelVelocity = params.flywheelVelocity();
@@ -441,8 +441,22 @@ public class Superstructure extends SubsystemBase {
         return shooter.getLeft().atTargetVelocity() && shooter.getRight().atTargetVelocity();
     }
 
+    public Command setFlywheelVelocityCommand(AngularVelocity velocity) {
+        return Commands.runOnce(() -> setFlywheelVelocity(velocity), shooter.getLeft(), shooter.getRight())
+                .withName("SetFlywheelVelocity:" + velocity.in(RPM) + "RPM");
+    }
+
+    public Command setFlywheelVelocityCommand(Supplier<AngularVelocity> velocitySupplier) {
+        return Commands.run(() -> setFlywheelVelocity(velocitySupplier.get()), shooter.getLeft(), shooter.getRight())
+                .withName("SetFlywheelVelocity");
+    }
+
+    public Command setFlywheelVelocityAndWaitCommand(AngularVelocity velocity) {
+        return setFlywheelVelocityCommand(velocity).until(this::atTargetVelocity);
+    }
+
     public Command autoChooseShootingCommand(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
-        if (ShooterConstants.manualShootingEnabled) {
+        if (ShooterConstants.kManualShootingEnabled) {
             return runOnce(() -> setFlywheelVelocity(RPM.of(manualShootingSpeedRPM.get())));
         } else {
             return fullAutoAim(drive, xSupplier, ySupplier);

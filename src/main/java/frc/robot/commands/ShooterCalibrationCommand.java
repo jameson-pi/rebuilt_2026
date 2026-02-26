@@ -230,7 +230,7 @@ public class ShooterCalibrationCommand extends Command {
             this.driveSim = driveSim;
             this.poseResetter = poseResetter;
             this.testDistances = testDistances;
-            this.testAngles = new Angle[] {ShooterConstants.fixedHoodAngle}; // Only one angle when hood is disabled
+            this.testAngles = new Angle[] {ShooterConstants.kFixedHoodAngle}; // Only one angle when hood is disabled
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
             this.tempLowerBound = lowerBound;

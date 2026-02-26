@@ -74,7 +74,7 @@ public class TrajectoryBall {
             if (hasHood) {
                 stationary = calculateStationary(staticDistance, maxHeight, targetHeight);
             } else {
-                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.fixedHoodAngle);
+                stationary = calculateFixedAngle(staticDistance, targetHeight, ShooterConstants.kFixedHoodAngle);
             }
         }
 
@@ -107,7 +107,7 @@ public class TrajectoryBall {
         // 3. Estimate launch speed using an efficiency factor (loss during transfer to ball)
         LinearVelocity launchSpeed =
                 MetersPerSecond.of(tangentialVelocity.in(MetersPerSecond) * ShooterConstants.launchEfficiency);
-        Angle angle = ShooterConstants.fixedHoodAngle;
+        Angle angle = ShooterConstants.kFixedHoodAngle;
 
         // 4. Calculate Time of Flight (TOF)
         // t = distance / horizontal_velocity
