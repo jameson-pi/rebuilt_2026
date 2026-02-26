@@ -218,13 +218,10 @@ public class RobotContainer {
                 () -> intake.isRollerRunningSupplier().getAsBoolean()
                         ? OIController.driveTranslationYIntakeRunning().getAsDouble()
                         : OIController.driveTranslationY().getAsDouble(),
-
                 () -> intake.isRollerRunningSupplier().getAsBoolean()
                         ? OIController.driveTranslationXIntakeRunning().getAsDouble()
                         : OIController.driveTranslationX().getAsDouble(),
-
-                () -> OIController.driveRotation().getAsDouble()
-        ));
+                () -> OIController.driveRotation().getAsDouble()));
 
         // // Lock to 0° when button is held
         // OIController.driveLock0()
@@ -234,8 +231,7 @@ public class RobotContainer {
         //                 () -> -OIController.driveTranslationX().getAsDouble(),
         //                 () -> new Rotation2d()));
 
-        OIController.spinUpShooter()
-                .whileTrue(superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
+        OIController.spinUpShooter().whileTrue(superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());

@@ -25,12 +25,15 @@ public interface OI {
     default DoubleSupplier driveRotation() {
         return noAxis;
     }
+
     default DoubleSupplier driveTranslationXIntakeRunning() {
         return noAxis;
     }
+
     default DoubleSupplier driveTranslationYIntakeRunning() {
         return noAxis;
     }
+
     default Trigger zeroDrivebase() {
         return noButton;
     }
