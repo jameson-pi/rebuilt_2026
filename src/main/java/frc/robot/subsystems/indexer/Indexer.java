@@ -11,7 +11,7 @@ public class Indexer extends SubsystemBase {
     private final IndexerIO indexerIO;
     private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
 
-    private AngularVelocity setpoint = RotationsPerSecond.of(0);
+    private AngularVelocity setpoint = RotationsPerSecond.zero();
 
     public Indexer(IndexerIO indexerIO) {
         this.indexerIO = indexerIO;
@@ -28,6 +28,10 @@ public class Indexer extends SubsystemBase {
         return runOnce(() -> indexerIO.setCustomSpeed(speed));
     }
 
+    public Command runPercentOutput(double percent) {
+        return run(() -> indexerIO.setCustomSpeed(percent));
+    }
+
     public Command indexReverse() {
         return run(() -> {
             setpoint = IndexerConstants.kCollectorRPM.times(-1);
@@ -37,7 +41,7 @@ public class Indexer extends SubsystemBase {
 
     public Command stop() {
         return runOnce(() -> {
-            setpoint = RotationsPerSecond.of(0);
+            setpoint = RotationsPerSecond.zero();
             indexerIO.stop();
         });
     }
@@ -47,7 +51,7 @@ public class Indexer extends SubsystemBase {
             setpoint = IndexerConstants.kCollectorRPM;
             indexerIO.setVelocity(IndexerConstants.kCollectorRPM);
         } else {
-            setpoint = RotationsPerSecond.of(0);
+            setpoint = RotationsPerSecond.zero();
             indexerIO.stop();
         }
     }

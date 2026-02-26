@@ -8,6 +8,8 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 public class IndexerIOSim implements IndexerIO {
@@ -48,21 +50,24 @@ public class IndexerIOSim implements IndexerIO {
     }
 
     private double currentLimitedVoltage(double desiredVolts) {
+        double batteryVoltage = RobotController.getBatteryVoltage();
         double velocityRadPerSec = sim.getAngularVelocityRPM() * 2.0 * Math.PI / 60.0;
-        double backEmf = velocityRadPerSec * (12.0 / DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec);
-        double motorResistance = 12.0 / DCMotor.getKrakenX60Foc(1).stallCurrentAmps;
+        double backEmf = velocityRadPerSec * (batteryVoltage / MOTOR.freeSpeedRadPerSec);
+        double motorResistance = batteryVoltage / MOTOR.stallCurrentAmps;
         double vMax = Math.min(
-                12.0, backEmf + IndexerConstants.MotorConfigurationConfigs.PeakForwardTorqueCurrent * motorResistance);
+                batteryVoltage,
+                backEmf + IndexerConstants.MotorConfigurationConfigs.PeakForwardTorqueCurrent * motorResistance);
         double vMin = Math.max(
-                -12.0, backEmf - IndexerConstants.MotorConfigurationConfigs.PeakReverseTorqueCurrent * motorResistance);
+                -batteryVoltage,
+                backEmf - IndexerConstants.MotorConfigurationConfigs.PeakReverseTorqueCurrent * motorResistance);
         return MathUtil.clamp(desiredVolts, vMin, vMax);
     }
 
     @Override
     public void setCustomSpeed(double speed) {
-        appliedVolts = currentLimitedVoltage(speed * 12.0);
+        appliedVolts = currentLimitedVoltage(speed * RobotController.getBatteryVoltage());
         sim.setInputVoltage(appliedVolts);
-        sim.update(0.02); // 0.02 can become TimedRobot.kDefaultPeriod
+        sim.update(TimedRobot.kDefaultPeriod);
     }
 
     @Override
@@ -72,7 +77,7 @@ public class IndexerIOSim implements IndexerIO {
         appliedVolts = currentLimitedVoltage(ff + fb);
 
         sim.setInputVoltage(appliedVolts);
-        sim.update(0.02); // 0.02 can become TimedRobot.kDefaultPeriod
+        sim.update(TimedRobot.kDefaultPeriod);
 
         indexerInputs.motorOutput = Volts.of(appliedVolts);
         indexerInputs.motorVelocity = RPM.of(sim.getAngularVelocityRPM());
