@@ -17,14 +17,6 @@ public class Indexer extends SubsystemBase {
         this.indexerIO = indexerIO;
     }
 
-    @Override
-    public void periodic() {
-        indexerIO.updateInputs(inputs);
-        Logger.processInputs("Indexer", inputs);
-        Logger.recordOutput("Indexer/Setpoint", setpoint);
-        Logger.recordOutput("Indexer/Running", Math.abs(setpoint.in(RotationsPerSecond)) > 0.1);
-    }
-
     public Command index() {
         return run(() -> {
             setpoint = IndexerConstants.kCollectorRPM;
@@ -58,5 +50,13 @@ public class Indexer extends SubsystemBase {
             setpoint = RotationsPerSecond.of(0);
             indexerIO.stop();
         }
+    }
+
+    @Override
+    public void periodic() {
+        indexerIO.updateInputs(inputs);
+        Logger.processInputs("Indexer", inputs);
+        Logger.recordOutput("Indexer/Setpoint", setpoint);
+        Logger.recordOutput("Indexer/Running", Math.abs(setpoint.in(RotationsPerSecond)) > 0.1);
     }
 }

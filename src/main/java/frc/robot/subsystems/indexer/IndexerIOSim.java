@@ -11,7 +11,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 public class IndexerIOSim implements IndexerIO {
-    private static final DCMotor MOTOR = DCMotor.getKrakenX60Foc(1);
     private static final double ROLLER_MASS_KG = 0.25;
     private static final double ROLLER_RADIUS_M = 0.02;
     private static final double ROLLER_MOI = 0.5 * ROLLER_MASS_KG * ROLLER_RADIUS_M * ROLLER_RADIUS_M;
@@ -25,13 +24,13 @@ public class IndexerIOSim implements IndexerIO {
     private double appliedVolts = 0.0;
 
     public IndexerIOSim() {
-        var plant = LinearSystemId.createFlywheelSystem(MOTOR, ROLLER_MOI, ROLLER_GEARING);
-        sim = new FlywheelSim(plant, MOTOR);
+        var plant = LinearSystemId.createFlywheelSystem(DCMotor.getKrakenX60Foc(1), ROLLER_MOI, ROLLER_GEARING);
+        sim = new FlywheelSim(plant, DCMotor.getKrakenX60Foc(1));
 
         controller =
                 new PIDController(IndexerConstants.SimPID.kP, IndexerConstants.SimPID.kI, IndexerConstants.SimPID.kD);
 
-        double freeSpeedRPM = MOTOR.freeSpeedRadPerSec * 60.0 / (2.0 * Math.PI);
+        double freeSpeedRPM = DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec * 60.0 / (2.0 * Math.PI);
         double kv = 12.0 / freeSpeedRPM;
         feedforward = new SimpleMotorFeedforward(0.0, kv, 0.0);
     }
@@ -50,8 +49,8 @@ public class IndexerIOSim implements IndexerIO {
 
     private double currentLimitedVoltage(double desiredVolts) {
         double velocityRadPerSec = sim.getAngularVelocityRPM() * 2.0 * Math.PI / 60.0;
-        double backEmf = velocityRadPerSec * (12.0 / MOTOR.freeSpeedRadPerSec);
-        double motorResistance = 12.0 / MOTOR.stallCurrentAmps;
+        double backEmf = velocityRadPerSec * (12.0 / DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec);
+        double motorResistance = 12.0 / DCMotor.getKrakenX60Foc(1).stallCurrentAmps;
         double vMax = Math.min(
                 12.0, backEmf + IndexerConstants.MotorConfigurationConfigs.PeakForwardTorqueCurrent * motorResistance);
         double vMin = Math.max(
