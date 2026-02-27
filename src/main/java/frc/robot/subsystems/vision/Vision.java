@@ -80,6 +80,34 @@ public class Vision extends SubsystemBase {
         return inputs[cameraIndex].latestTargetObservation.tx();
     }
 
+    public int getTagCount(int cameraIndex) {
+        var observations = inputs[cameraIndex].poseObservations;
+        if (observations.length == 0) {
+            return 0;
+        }
+        var latestObservation = observations[observations.length - 1];
+        return latestObservation.tagCount();
+    }
+
+     public Pose3d getStartingPoseFromCamera(int cameraIndex) {
+        if (cameraIndex >= inputs.length || !inputs[cameraIndex].connected) {
+            return null;
+        }
+
+        var observations = inputs[cameraIndex].poseObservations;
+        if (observations.length == 0) {
+            return null;
+        }
+
+        // Return the most recent pose observation with at least one tag
+        var latestObservation = observations[observations.length - 1];
+        if (latestObservation.tagCount() > 0) {
+            return latestObservation.pose();
+        }
+        return null;
+    }
+
+
     @Override
     public void periodic() {
         for (int i = 0; i < io.length; i++) {
