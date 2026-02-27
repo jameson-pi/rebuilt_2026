@@ -294,7 +294,6 @@ public class RobotContainer {
     public Command getRobotStartPose(int cameraIndex) {
         return Commands.runOnce(() -> {
                     Pose3d cameraPose = vision.getStartingPoseFromCamera(cameraIndex);
-                    // Logger.recordOutput("CameraPose", cameraPose);
                     if (cameraPose != null) {
                         drive.setPose(cameraPose.toPose2d());
                     }
