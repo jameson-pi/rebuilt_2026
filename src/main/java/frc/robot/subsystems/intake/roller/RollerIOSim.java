@@ -17,6 +17,7 @@ import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class RollerIOSim implements RollerIO {
 
@@ -25,6 +26,9 @@ public class RollerIOSim implements RollerIO {
     private final TalonFXSimState intakeMotorSim;
     private final IntakeSimulation intakeSim;
     private final CurrentLimitsConfigs currentConfig;
+    // dashboard-tunable roller speeds
+    private final LoggedNetworkNumber kRollerIntakePercent;
+    private final LoggedNetworkNumber kRollerOuttakePercent;
 
     public RollerIOSim(AbstractDriveTrainSimulation driveSim) {
         currentConfig = new CurrentLimitsConfigs();
@@ -48,6 +52,10 @@ public class RollerIOSim implements RollerIO {
                 IntakeConstants.kIntakeExtension,
                 IntakeConstants.kIntakeSide,
                 IntakeConstants.kIntakeCapacity);
+
+        kRollerIntakePercent = new LoggedNetworkNumber("Intake/Roller/IntakePercent", RollerConstants.kIntakePercent);
+        kRollerOuttakePercent =
+                new LoggedNetworkNumber("Intake/Roller/OuttakePercent", RollerConstants.kOuttakePercent);
     }
 
     public void setRollerSpeed(double speed) {
@@ -56,7 +64,7 @@ public class RollerIOSim implements RollerIO {
 
     @Override
     public void start() {
-        setRollerSpeed(RollerConstants.kIntakePercent);
+        setRollerSpeed(kRollerIntakePercent.get());
         intakeSim.startIntake();
     }
 
@@ -68,7 +76,7 @@ public class RollerIOSim implements RollerIO {
 
     @Override
     public void outtake() {
-        setRollerSpeed(RollerConstants.kOuttakePercent);
+        setRollerSpeed(kRollerOuttakePercent.get());
         intakeSim.removeObtainedGamePieces(SimulatedArena.getInstance());
     }
 
