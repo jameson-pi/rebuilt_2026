@@ -225,12 +225,8 @@ public class RobotContainer {
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
                 // The lambda () -> ensures this check happens every loop
-                () -> intake.isRollerRunningSupplier().getAsBoolean()
-                        ? OIController.driveTranslationYIntakeRunning().getAsDouble()
-                        : OIController.driveTranslationY().getAsDouble(),
-                () -> intake.isRollerRunningSupplier().getAsBoolean()
-                        ? OIController.driveTranslationXIntakeRunning().getAsDouble()
-                        : OIController.driveTranslationX().getAsDouble(),
+                () -> OIController.driveTranslationY().getAsDouble(),
+                () -> OIController.driveTranslationX().getAsDouble(),
                 () -> OIController.driveRotation().getAsDouble()));
 
         // // Lock to 0° when button is held
@@ -264,7 +260,7 @@ public class RobotContainer {
         OIController.intake().whileTrue(intake.intakeCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
         OIController.zeroIntake().onTrue(intake.zeroExtender());
-        OIController.toggleIntakeState().onTrue(intake.toggleIntake()).onFalse(intake.toggleIntake());
+        OIController.toggleIntakeState().onTrue(intake.toggleIntake());
     }
 
     /**
