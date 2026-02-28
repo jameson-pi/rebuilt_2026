@@ -49,7 +49,7 @@ public class Robot extends LoggedRobot {
                 break;
         }
 
-        SignalLogger.setPath("/home/lvuser/logs/");
+        SignalLogger.setPath("/media/sda1/logs/");
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         // Start AdvantageKit logger
