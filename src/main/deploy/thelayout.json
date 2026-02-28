@@ -5,160 +5,19 @@
     {
       "name": "Teleoperated",
       "grid_layout": {
-        "layouts": [
-          {
-            "title": "PowerDistribution",
-            "x": 256.0,
-            "y": 256.0,
-            "width": 256.0,
-            "height": 384.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "ChannelCount",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/ChannelCount",
-                  "period": 0.06,
-                  "data_type": "int",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "ChannelCurrent",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/ChannelCurrent",
-                  "period": 0.06,
-                  "data_type": "double[]",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Faults",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/Faults",
-                  "period": 0.06,
-                  "data_type": "int",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "StickyFaults",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/StickyFaults",
-                  "period": 0.06,
-                  "data_type": "int",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Temperature",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/Temperature",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "TotalCurrent",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/TotalCurrent",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "TotalEnergy",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/TotalEnergy",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "TotalPower",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/TotalPower",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Voltage",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/PowerDistribution/Voltage",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              }
-            ]
-          }
-        ],
+        "layouts": [],
         "containers": [
           {
             "title": "AllianceStation",
-            "x": 0.0,
+            "x": 256.0,
             "y": 0.0,
-            "width": 256.0,
+            "width": 384.0,
             "height": 128.0,
-            "type": "Text Display",
+            "type": "Large Text Display",
             "properties": {
               "topic": "/AdvantageKit/DriverStation/AllianceStation",
               "period": 0.06,
-              "data_type": "int",
-              "show_submit_button": true
+              "data_type": "int"
             }
           },
           {
@@ -181,7 +40,7 @@
           {
             "title": "Enabled",
             "x": 0.0,
-            "y": 512.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -198,7 +57,7 @@
           {
             "title": "GameSpecificMessage",
             "x": 0.0,
-            "y": 384.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -211,22 +70,24 @@
           },
           {
             "title": "MatchTime",
-            "x": 0.0,
-            "y": 256.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Text Display",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 384.0,
+            "height": 256.0,
+            "type": "Match Time",
             "properties": {
               "topic": "/AdvantageKit/DriverStation/MatchTime",
               "period": 0.06,
               "data_type": "double",
-              "show_submit_button": true
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 15,
+              "yellow_start_time": 30
             }
           },
           {
-            "title": "IsExtended",
-            "x": 256.0,
-            "y": 0.0,
+            "title": "Intake  Extended",
+            "x": 640.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -241,18 +102,52 @@
             }
           },
           {
-            "title": "IsRetracted",
-            "x": 256.0,
+            "title": "Shooter Ready",
+            "x": 640.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/LeftShooter/AtTargetVelocity",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Indexer Running",
+            "x": 640.0,
             "y": 128.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
-              "topic": "/AdvantageKit/RealOutputs/Intake/Extender/IsRetracted",
+              "topic": "/AdvantageKit/RealOutputs/Indexer/Running",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Alliance Color",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/FMSInfo/IsRedAlliance",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4294198070,
+              "false_color": 4278190335,
               "true_icon": "None",
               "false_icon": "None"
             }
