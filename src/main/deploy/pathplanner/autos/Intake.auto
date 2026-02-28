@@ -5,15 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "New Path"
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "Spin Up Shooter and Wait"
+            "name": "Intake"
           }
         }
       ]

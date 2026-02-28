@@ -20,6 +20,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -87,9 +88,6 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                intake = new Intake(
-                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
-                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
                 if (Constants.EnabledSubsystems.kDrive) {
                     drive = new Drive(
                             new GyroIOPigeon2(),
@@ -107,7 +105,14 @@ public class RobotContainer {
                             new ModuleIO() {},
                             (pose) -> {});
                 }
-                vision = new Vision(drive);
+                this.vision = new Vision(
+                        drive,
+                        new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
+                        new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
+                intake = new Intake(
+                        Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
+                        Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
+
                 driveSimulation = null;
                 break;
 
@@ -129,8 +134,14 @@ public class RobotContainer {
                                 TunerConstants.BackLeft, driveSimulation.getModules()[2]),
                         new ModuleIOTalonFXSim(
                                 TunerConstants.BackRight, driveSimulation.getModules()[3]),
-                        (pose) -> driveSimulation.setSimulationWorldPose(pose));
-                vision = new Vision(drive, new VisionIOLimelight(camera0Name, drive::getRotation));
+                        driveSimulation::setSimulationWorldPose);
+                vision = new Vision(
+                        drive,
+                        new VisionIOPhotonVisionSim(
+                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                        new VisionIOPhotonVisionSim(
+                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+
                 break;
             default:
                 drive = new Drive(
@@ -146,18 +157,16 @@ public class RobotContainer {
                 break;
         }
 
-        superstructure = new Superstructure();
+        superstructure = new Superstructure(intake::isRollerRunning);
 
         if (Constants.currentMode == Constants.Mode.SIM) {
             superstructure.configureGamePieceSimulation(driveSimulation);
         }
+        NamedCommands.registerCommand("Spin Up Shooter", superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
         NamedCommands.registerCommand(
-                "Shoot",
-                Commands.deadline(
-                        Commands.run(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000)))
-                                .andThen(superstructure.fireCommand()),
-                        Commands.waitSeconds(5)));
-
+                "Spin Up Shooter and Wait", superstructure.setFlywheelVelocityAndWaitCommand(RPM.of(3600)));
+        NamedCommands.registerCommand(
+                "Shoot", Commands.deadline(superstructure.fireCommand(), Commands.waitSeconds(5)));
         NamedCommands.registerCommand(
                 "Intake", Commands.deadline(Commands.run(() -> intake.intakeCommand()), Commands.waitSeconds(6)));
         // Set up auto routines
@@ -216,9 +225,10 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
-                OIController.driveTranslationY(),
-                OIController.driveTranslationX(),
-                OIController.driveRotation()));
+                // The lambda () -> ensures this check happens every loop
+                () -> OIController.driveTranslationY().getAsDouble(),
+                () -> OIController.driveTranslationX().getAsDouble(),
+                () -> OIController.driveRotation().getAsDouble()));
 
         // // Lock to 0° when button is held
         // OIController.driveLock0()
@@ -228,9 +238,7 @@ public class RobotContainer {
         //                 () -> -OIController.driveTranslationX().getAsDouble(),
         //                 () -> new Rotation2d()));
 
-        OIController.spinUpShooter()
-                .whileTrue(
-                        Commands.runOnce(() -> superstructure.getLeftShooter().setFlywheelVelocity(RPM.of(3000))));
+        OIController.spinUpShooter().whileTrue(superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
@@ -253,7 +261,7 @@ public class RobotContainer {
         OIController.intake().whileTrue(intake.intakeCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
         OIController.zeroIntake().onTrue(intake.zeroExtender());
-        OIController.toggleIntakeState().onTrue(intake.toggleIntake()).onFalse(intake.toggleIntake());
+        OIController.toggleIntakeState().onTrue(intake.toggleIntake());
     }
 
     /**
@@ -277,5 +285,15 @@ public class RobotContainer {
         SimulatedArena.getInstance().simulationPeriodic();
         Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput("FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+    }
+
+    public Command getRobotStartPose(int cameraIndex) {
+        return Commands.runOnce(() -> {
+                    Pose3d cameraPose = vision.getStartingPoseFromCamera(cameraIndex);
+                    if (cameraPose != null) {
+                        drive.setPose(cameraPose.toPose2d());
+                    }
+                })
+                .ignoringDisable(true);
     }
 }

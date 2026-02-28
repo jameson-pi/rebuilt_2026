@@ -15,6 +15,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,6 +52,8 @@ public class Robot extends LoggedRobot {
 
         SignalLogger.setPath("/media/sda1/logs/");
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        DriverStation.silenceJoystickConnectionWarning(true);
 
         // Start AdvantageKit logger
         Logger.start();

@@ -8,14 +8,17 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants;
-import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class RollerIOReal implements RollerIO {
 
     private final TalonFX rollerMotor;
     private final TalonFXConfiguration rollerMotorConfig;
     private final CurrentLimitsConfigs currentConfig;
+
+    private final LoggedNetworkNumber kRollerIntakePercent;
+    private final LoggedNetworkNumber kRollerOuttakePercent;
 
     public RollerIOReal() {
         currentConfig = new CurrentLimitsConfigs();
@@ -30,6 +33,10 @@ public class RollerIOReal implements RollerIO {
         rollerMotor = new TalonFX(Constants.CANIDs.MotorIDs.kRollerMotorID);
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
         rollerMotor.getConfigurator().apply(currentConfig);
+
+        kRollerIntakePercent = new LoggedNetworkNumber("Intake/Roller/IntakePercent", RollerConstants.kIntakePercent);
+        kRollerOuttakePercent =
+                new LoggedNetworkNumber("Intake/Roller/OuttakePercent", RollerConstants.kOuttakePercent);
     }
 
     public void setRollerSpeed(double speed) {
@@ -43,12 +50,12 @@ public class RollerIOReal implements RollerIO {
 
     @Override
     public void start() {
-        setRollerSpeed(IntakeConstants.RollerConstants.kIntakePercent);
+        setRollerSpeed(kRollerIntakePercent.get());
     }
 
     @Override
     public void outtake() {
-        setRollerSpeed(IntakeConstants.RollerConstants.kOuttakePercent);
+        setRollerSpeed(kRollerOuttakePercent.get());
     }
 
     @Override
