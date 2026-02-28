@@ -42,7 +42,7 @@ public class IntakeConstants {
 
     public static class ExtenderConstants {
         public static final int kExtenderTicksPerRevolution = 2048;
-        public static final double kGearing = 30;
+        public static final double kGearing = 54;
         public static final AngularMomentum kMOI = KilogramMetersSquaredPerSecond.of(0.5);
         public static final Distance kExtenderArmLength = Inches.of(12.0);
         public static final double kDownSpeed = 0.05;
