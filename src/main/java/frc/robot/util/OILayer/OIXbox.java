@@ -18,6 +18,12 @@ public class OIXbox implements OI {
     public static final Trigger x = new JoystickButton(driverController, XboxController.Button.kX.value);
     public static final Trigger y = new JoystickButton(driverController, XboxController.Button.kY.value);
 
+    // Opertator face buttons
+    public static final Trigger opA = new JoystickButton(operatorController, XboxController.Button.kA.value);
+    public static final Trigger opB = new JoystickButton(operatorController, XboxController.Button.kB.value);
+    public static final Trigger opX = new JoystickButton(operatorController, XboxController.Button.kX.value);
+    public static final Trigger opY = new JoystickButton(operatorController, XboxController.Button.kY.value);
+
     // Bumpers and Triggers
     public static final Trigger leftBumper =
             new JoystickButton(driverController, XboxController.Button.kLeftBumper.value);
@@ -33,7 +39,6 @@ public class OIXbox implements OI {
             new Trigger(() -> triggerThreshold < driverController.getRawAxis(XboxController.Axis.kRightTrigger.value));
 
     // Operator Bumpers and Triggers
-
     public static final Trigger operatorLeftBumper =
             new JoystickButton(operatorController, XboxController.Button.kLeftBumper.value);
     public static final Trigger operatorRightBumper =
@@ -138,7 +143,12 @@ public class OIXbox implements OI {
 
     @Override
     public Trigger zeroIntake() {
-        return x;
+        return opX;
+    }
+
+    @Override
+    public Trigger downIntake() {
+        return opY;
     }
 
     @Override

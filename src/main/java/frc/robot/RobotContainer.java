@@ -260,7 +260,7 @@ public class RobotContainer {
 
         OIController.intake().whileTrue(intake.intakeCommand());
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
-        OIController.zeroIntake().onTrue(intake.zeroExtender());
+        OIController.zeroIntake().onTrue(intake.zeroIntake());
         OIController.toggleIntakeState().onTrue(intake.toggleIntake());
     }
 
