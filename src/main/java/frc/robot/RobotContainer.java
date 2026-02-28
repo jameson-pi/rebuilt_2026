@@ -171,9 +171,16 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Spin Up Shooter and Wait", superstructure.setFlywheelVelocityAndWaitCommand(RPM.of(3600)));
         NamedCommands.registerCommand(
-                "Shoot", Commands.deadline(superstructure.fireCommand(), Commands.waitSeconds(5)));
-        NamedCommands.registerCommand("Intake", Commands.deadline(intake.intakeCommand(), Commands.waitSeconds(6)));
+                "Shoot", Commands.deadline(Commands.waitSeconds(5), superstructure.fireCommand()));
+        // NamedCommands.registerCommand("Intake", Commands.deadline(intake.intakeCommand(), Commands.waitSeconds(6)));
         NamedCommands.registerCommand("Extend Intake", Commands.runOnce(intake::extendIntake));
+        NamedCommands.registerCommand(
+                "Intake",
+                Commands.deadline(
+                                Commands.waitSeconds(6),
+                                Commands.parallel(
+                                        intake.intakeCommand(), Commands.runOnce(() -> indexer.setRunning(true))))
+                        .andThen(indexer.stop()));
         NamedCommands.registerCommand(
                 "Index",
                 Commands.runOnce(() -> indexer.setRunning(true)).withTimeout(3).andThen(indexer.stop()));
