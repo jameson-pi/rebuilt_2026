@@ -118,6 +118,22 @@ public interface OI {
         return noButton;
     }
 
+    default Trigger shootSpeedLow() {
+        return noButton;
+    }
+
+    default Trigger shootSpeedMidLow() {
+        return noButton;
+    }
+
+    default Trigger shootSpeedMidHigh() {
+        return noButton;
+    }
+
+    default Trigger shootSpeedHigh() {
+        return noButton;
+    }
+
     /** Stop all superstructure mechanisms. */
     default Trigger stopSuperstructure() {
         return noButton;

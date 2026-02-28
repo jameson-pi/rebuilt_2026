@@ -58,6 +58,12 @@ public class OIXbox implements OI {
     public static final Trigger dPadRight = new POVButton(driverController, 90);
     public static final Trigger dPadLeft = new POVButton(driverController, 270);
 
+    public static final Trigger operatorDPadUp = new POVButton(operatorController, 0);
+    public static final Trigger operatorDPadRight = new POVButton(operatorController, 90);
+    public static final Trigger operatorDPadDown = new POVButton(operatorController, 180);
+
+    public static final Trigger operatorDPadLeft = new POVButton(operatorController, 270);
+
     // Joysticks
     public static final Trigger leftStickButton =
             new JoystickButton(driverController, XboxController.Button.kLeftStick.value);
@@ -179,5 +185,25 @@ public class OIXbox implements OI {
     @Override
     public Trigger climb_l3() {
         return dPadLeft;
+    }
+
+    @Override
+    public Trigger shootSpeedLow() {
+        return operatorDPadDown;
+    }
+
+    @Override
+    public Trigger shootSpeedMidLow() {
+        return operatorDPadLeft;
+    }
+
+    @Override
+    public Trigger shootSpeedMidHigh() {
+        return operatorDPadUp;
+    }
+
+    @Override
+    public Trigger shootSpeedHigh() {
+        return operatorDPadRight;
     }
 }

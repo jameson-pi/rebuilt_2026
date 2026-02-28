@@ -50,7 +50,7 @@ public class Robot extends LoggedRobot {
                 break;
         }
 
-        SignalLogger.setPath("/home/lvuser/logs/");
+        SignalLogger.setPath("/media/sda1/logs/");
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         DriverStation.silenceJoystickConnectionWarning(true);
@@ -83,7 +83,7 @@ public class Robot extends LoggedRobot {
     /** This function is called once when the robot is disabled. */
     @Override
     public void disabledInit() {
-        // robotContainer.resetSimulationField();
+        robotContainer.resetSimulationField();
     }
 
     /** This function is called periodically when disabled. */

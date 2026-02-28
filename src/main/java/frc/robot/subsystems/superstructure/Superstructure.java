@@ -90,7 +90,7 @@ public class Superstructure extends SubsystemBase {
     private final Indexer indexer;
     private final RobotState robotState;
     private GamePieceTrajectorySimulation gamePieceTrajectorySimulation;
-
+    private AngularVelocity manualShootingVelocity = RPM.of(ShooterConstants.kManualShootingSpeedRPM);
     /** Creates the superstructure and selects IO implementations by mode. */
     public Superstructure(BooleanSupplier isIntaking) {
         RobotState createdState = RobotState.getInstance();
@@ -470,5 +470,19 @@ public class Superstructure extends SubsystemBase {
         } else {
             return fullAutoAim(drive, xSupplier, ySupplier);
         }
+    }
+    /** Manual override command for testing and bench mode. Doesn't run the shooter */
+    public Command setFlywheelVelocityManual(AngularVelocity velocity) {
+        return Commands.runOnce(() -> manualShootingVelocity = velocity);
+    }
+
+    public Command runFlywheelVelocityManual() {
+        return Commands.run(
+                        () -> {
+                            setFlywheelVelocity(manualShootingVelocity);
+                        },
+                        shooter.getLeft(),
+                        shooter.getRight())
+                .withName("RunFlywheelVelocityManual");
     }
 }

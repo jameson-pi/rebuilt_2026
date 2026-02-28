@@ -31,6 +31,10 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ShooterCalibrationCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIO;
+import frc.robot.subsystems.indexer.IndexerIOReal;
+import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.extender.ExtenderIO;
 import frc.robot.subsystems.intake.extender.ExtenderIOReal;
@@ -65,7 +69,7 @@ public class RobotContainer {
     private final Vision vision;
     private final Intake intake;
     private final OI OIController;
-
+    private final Indexer indexer;
     private final SwerveDriveSimulation
             driveSimulation; // Only used in simulation, but declared here for easy access by subsystems that need it
     private final RobotState robotState;
@@ -112,7 +116,7 @@ public class RobotContainer {
                 intake = new Intake(
                         Constants.EnabledSubsystems.kRoller ? new RollerIOReal() : new RollerIO() {},
                         Constants.EnabledSubsystems.kExtender ? new ExtenderIOReal() : new ExtenderIO() {});
-
+                indexer = new Indexer(Constants.EnabledSubsystems.kIndexer ? new IndexerIOReal() : new IndexerIO() {});
                 driveSimulation = null;
                 break;
 
@@ -141,7 +145,7 @@ public class RobotContainer {
                                 camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                         new VisionIOPhotonVisionSim(
                                 camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
-
+                indexer = new Indexer(Constants.EnabledSubsystems.kIndexer ? new IndexerIOSim() : new IndexerIO() {});
                 break;
             default:
                 drive = new Drive(
@@ -154,6 +158,7 @@ public class RobotContainer {
                 driveSimulation = null;
                 vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
                 intake = new Intake(new RollerIO() {}, new ExtenderIO() {});
+                indexer = new Indexer(new IndexerIO() {});
                 break;
         }
 
@@ -167,8 +172,11 @@ public class RobotContainer {
                 "Spin Up Shooter and Wait", superstructure.setFlywheelVelocityAndWaitCommand(RPM.of(3600)));
         NamedCommands.registerCommand(
                 "Shoot", Commands.deadline(superstructure.fireCommand(), Commands.waitSeconds(5)));
+        NamedCommands.registerCommand("Intake", Commands.deadline(intake.intakeCommand(), Commands.waitSeconds(6)));
+        NamedCommands.registerCommand("Extend Intake", Commands.runOnce(intake::extendIntake));
         NamedCommands.registerCommand(
-                "Intake", Commands.deadline(Commands.run(() -> intake.intakeCommand()), Commands.waitSeconds(6)));
+                "Index",
+                Commands.runOnce(() -> indexer.setRunning(true)).withTimeout(3).andThen(indexer.stop()));
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         if (Constants.currentMode == Constants.Mode.SIM) {
@@ -229,7 +237,8 @@ public class RobotContainer {
                 () -> OIController.driveTranslationY().getAsDouble(),
                 () -> OIController.driveTranslationX().getAsDouble(),
                 () -> OIController.driveRotation().getAsDouble()));
-
+        indexer.setDefaultCommand(indexer.index(() ->
+                (intake.isRollerRunning() || superstructure.getLeftShooter().isRunning())));
         // // Lock to 0° when button is held
         // OIController.driveLock0()
         //         .whileTrue(DriveCommands.joystickDriveAtAngle(
@@ -238,7 +247,7 @@ public class RobotContainer {
         //                 () -> -OIController.driveTranslationX().getAsDouble(),
         //                 () -> new Rotation2d()));
 
-        OIController.spinUpShooter().whileTrue(superstructure.setFlywheelVelocityCommand(RPM.of(3600)));
+        OIController.spinUpShooter().whileTrue(superstructure.runFlywheelVelocityManual());
 
         // Manual fire (feeds piece when shooter is ready)
         OIController.fireShooter().whileTrue(superstructure.fireCommand()).onFalse(superstructure.stopUpgoerCommand());
@@ -250,6 +259,11 @@ public class RobotContainer {
         // Stop all components
         OIController.stopSuperstructure()
                 .onTrue(superstructure.stopShooterCommand().alongWith(superstructure.stopUpgoerCommand()));
+
+        OIController.shootSpeedLow().onTrue(superstructure.setFlywheelVelocityManual(RPM.of(2900)));
+        OIController.shootSpeedMidLow().onTrue(superstructure.setFlywheelVelocityManual(RPM.of(3300)));
+        OIController.shootSpeedMidHigh().onTrue(superstructure.setFlywheelVelocityManual(RPM.of(3600)));
+        OIController.shootSpeedHigh().onTrue(superstructure.setFlywheelVelocityManual(RPM.of(3900)));
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -277,6 +291,13 @@ public class RobotContainer {
         if (Constants.currentMode != Constants.Mode.SIM || driveSimulation == null) return;
 
         driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+    }
+
+    public void resetSimulationField() {
+        if (Constants.currentMode != Constants.Mode.SIM) return;
+
+        driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+        SimulatedArena.getInstance().resetFieldForAuto();
     }
 
     public void updateSimulation() {
