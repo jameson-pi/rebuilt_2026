@@ -50,14 +50,12 @@ public class ExtenderIOReal implements ExtenderIO {
 
         extenderMotorConfig = new TalonFXConfiguration();
         extenderMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ExtenderConstants.MotorConfig.kRampPeriod;
-        extenderMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        extenderMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         extenderMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        extenderMotorConfig.Feedback.SensorToMechanismRatio = ExtenderConstants.kGearing;
 
         extenderMotor.applyConfiguration(extenderMotorConfig);
         extenderMotor.getConfigurator().apply(currentConfig);
 
-        // Initialize LoggedNetworkNumber instances for angle constants (only angles initialized in constructor)
         kExtenderStowAngle =
                 new LoggedNetworkNumber("Intake/Extender/StowAngle", ExtenderConstants.kExtenderStowAngle.in(Degrees));
         kExtenderIntakeAngle = new LoggedNetworkNumber(
@@ -77,7 +75,7 @@ public class ExtenderIOReal implements ExtenderIO {
     public void setPosition(Angle position) {
         double clampedDeg = Math.max(kExtenderMinAngle.get(), Math.min(kExtenderMaxAngle.get(), position.in(Degrees)));
         this.setpoint = Degrees.of(clampedDeg);
-        extenderMotor.setControl(new PositionVoltage(this.setpoint.times(ExtenderConstants.kGearing)));
+        extenderMotor.setControl(new PositionVoltage(this.setpoint.times(ExtenderConstants.kgearing)));
     }
 
     public Angle getPosition() {
@@ -89,7 +87,8 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public boolean isAtAngle(Angle angle) {
-        return Math.abs((getPosition().minus(angle)).in(Degrees)) < kExtenderTolerance.get();
+        return Math.abs((getPosition().minus(angle)).in(Degrees))
+                < kExtenderTolerance.get() * ExtenderConstants.kgearing;
     }
 
     @Override

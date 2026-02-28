@@ -89,7 +89,7 @@ public class Vision extends SubsystemBase {
         return latestObservation.tagCount();
     }
 
-     public Pose3d getStartingPoseFromCamera(int cameraIndex) {
+    public Pose3d getStartingPoseFromCamera(int cameraIndex) {
         if (cameraIndex >= inputs.length || !inputs[cameraIndex].connected) {
             return null;
         }
@@ -106,7 +106,6 @@ public class Vision extends SubsystemBase {
         }
         return null;
     }
-
 
     @Override
     public void periodic() {
