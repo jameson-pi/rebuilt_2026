@@ -282,7 +282,8 @@ public class RobotContainer {
         OIController.intake().whileTrue(intake.intakeCommand().alongWith(indexer.index()));
         OIController.outtake().whileTrue(intake.outtakeRollerCommand());
         OIController.zeroIntake().onTrue(intake.zeroExtender());
-        OIController.toggleIntakeState().whileTrue(intake.stowIntake());
+        OIController.toggleIntakeState().onTrue(intake.retractIntakeCommand());
+        OIController.intakeMiddle().onTrue(intake.goToSiftAngleOneCommand());
     }
 
     /**

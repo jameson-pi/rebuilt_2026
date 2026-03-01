@@ -76,7 +76,7 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     public void setPosition(Angle position) {
-        Logger.recordOutput("Intake/Extender/PositionDegrees", position);
+        Logger.recordOutput("Intake/Extender/SetpointDgrees", position);
         extenderMotor.setControl(new PositionVoltage(position.times(ExtenderConstants.kGearing)));
     }
 
@@ -109,12 +109,12 @@ public class ExtenderIOReal implements ExtenderIO {
     }
 
     @Override
-    public BooleanSupplier isExtended() {
+    public BooleanSupplier isRetracted() {
         return () -> isAtAngle(Degrees.of(kExtenderIntakeAngle.get()));
     }
 
     @Override
-    public BooleanSupplier isRetracted() {
+    public BooleanSupplier isExtended() {
         return () -> isAtAngle(Degrees.of(kExtenderStowAngle.get()));
     }
 

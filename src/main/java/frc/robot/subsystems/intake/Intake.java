@@ -127,6 +127,8 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/Extender/IsExtended", extenderInputs.isExtended);
         Logger.recordOutput("Intake/Extender/IsRetracted", extenderInputs.isRetracted);
         Logger.recordOutput("Intake/Extender/SetpointDegrees", extenderInputs.setpoint);
+        Logger.recordOutput("Intake/Extender/PositionDegrees", extenderInputs.position);
+
         Logger.recordOutput("Intake/Extender/VelocityRPS", extenderInputs.velocity);
         Logger.recordOutput("Intake/Extender/MotorVoltage", extenderInputs.motorVoltage);
         Logger.recordOutput("Intake/Extender/MotorCurrent", extenderInputs.motorCurrent);
