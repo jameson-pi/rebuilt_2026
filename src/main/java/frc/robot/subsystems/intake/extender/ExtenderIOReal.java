@@ -24,7 +24,7 @@ public class ExtenderIOReal implements ExtenderIO {
     private final CurrentLimitsConfigs currentConfig;
     private final TalonFXConfiguration extenderMotorConfig;
     private final Slot0Configs extenderPID;
-    private Angle setpoint;
+    private final Angle setpoint;
     // Logged network numbers for tuning/monitoring extender angles (no "NN" suffix per request)
     private final LoggedNetworkNumber kExtenderStowAngle;
     private final LoggedNetworkNumber kExtenderIntakeAngle;

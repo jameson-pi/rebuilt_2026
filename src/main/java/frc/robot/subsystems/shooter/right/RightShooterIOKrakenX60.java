@@ -116,7 +116,8 @@ public class RightShooterIOKrakenX60 implements RightShooterIO {
             spinConfig.CurrentLimits.SupplyCurrentLimitEnable = RightShooterConstants.spinCurrentLimitSupplyEnable;
             spinConfig.ClosedLoopRamps.withDutyCycleClosedLoopRampPeriod(
                     RightShooterConstants.spinClosedLoopRamp.in(Seconds));
-            spinConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(RightShooterConstants.spinOpenLoopRamp.in(Seconds));
+            spinConfig.OpenLoopRamps.withDutyCycleOpenLoopRampPeriod(
+                    RightShooterConstants.spinOpenLoopRamp.in(Seconds));
             tryUntilOk(5, () -> spinMotor.applyConfiguration(spinConfig, 0.25));
         }
 

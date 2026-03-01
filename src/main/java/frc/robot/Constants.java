@@ -68,7 +68,7 @@ public final class Constants {
         public static final boolean kIndexer = true;
     }
 
-    public static enum Mode {
+    public enum Mode {
         REAL,
         /** Running a physics simulator. */
         SIM,

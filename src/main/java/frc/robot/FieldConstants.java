@@ -18,9 +18,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Contains information for location of field element and other useful reference points.
@@ -357,12 +360,87 @@ public class FieldConstants {
         }
     }
 
+    /**
+     * Determine whether our alliance's hub is currently active based on game data, alliance color, and match time. Uses
+     * the 2026 shift schedule:
+     *
+     * <ul>
+     *   <li>Auto: hub always active
+     *   <li>Shift 1 (match time 130–105 s): active for the alliance that lost auto
+     *   <li>Shift 2 (105–80 s): active for the alliance that won auto
+     *   <li>Shift 3 (80–55 s): active for the alliance that lost auto
+     *   <li>Shift 4 (55–30 s): active for the alliance that won auto
+     *   <li>End game (≤30 s): hub always active
+     * </ul>
+     *
+     * <p>Game data is a single character ('R' or 'B') indicating the alliance whose goal goes inactive first. That
+     * alliance's goal is active in shifts 2 and 4.
+     */
+    public static boolean isHubActive() {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        // If we have no alliance, we cannot be enabled, therefore no hub.
+        if (alliance.isEmpty()) {
+            return false;
+        }
+        // Hub is always enabled in autonomous.
+        if (DriverStation.isAutonomousEnabled()) {
+            return true;
+        }
+        // At this point, if we're not teleop enabled, there is no hub.
+        if (!DriverStation.isTeleopEnabled()) {
+            return false;
+        }
+
+        // We're teleop enabled, compute.
+        double matchTime = DriverStation.getMatchTime();
+        String gameData = DriverStation.getGameSpecificMessage();
+        // If we have no game data, we cannot compute, assume hub is active, as it's likely early in teleop.
+        if (gameData.isEmpty()) {
+            return true;
+        }
+        boolean redInactiveFirst = false;
+        switch (gameData.charAt(0)) {
+            case 'R' -> redInactiveFirst = true;
+            case 'B' -> redInactiveFirst = false;
+            default -> {
+                // If we have invalid game data, assume hub is active.
+                return true;
+            }
+        }
+
+        // Shift 1 is active for the alliance that lost auto.
+        // Red lost auto (redInactiveFirst) -> shift1Active for Red is false, Blue is true.
+        boolean shift1Active =
+                switch (alliance.get()) {
+                    case Red -> !redInactiveFirst;
+                    case Blue -> redInactiveFirst;
+                };
+
+        if (matchTime > 130) {
+            // Transition period after auto, hub is active.
+            return true;
+        } else if (matchTime > 105) {
+            // Shift 1
+            return shift1Active;
+        } else if (matchTime > 80) {
+            // Shift 2
+            return !shift1Active;
+        } else if (matchTime > 55) {
+            // Shift 3
+            return shift1Active;
+        } else if (matchTime > 30) {
+            // Shift 4
+            return !shift1Active;
+        } else {
+            // End game, hub always active.
+            return true;
+        }
+    }
+
     /** Get the hub position for the current alliance */
     public static Translation2d getHubPosition() {
         // Logic to determine alliance and return appropriate hub center
-        boolean isRed = edu.wpi.first.wpilibj.DriverStation.getAlliance()
-                        .orElse(edu.wpi.first.wpilibj.DriverStation.Alliance.Blue)
-                == edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
+        boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
         if (isRed) {
             // If we are Red, the target hub is the one on the Blue side (the "far" one relative to Blue driver
             // station?)
