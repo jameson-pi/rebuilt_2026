@@ -134,7 +134,9 @@ public class Superstructure extends SubsystemBase {
     @Override
     public void periodic() {
         // Log hub active state from game data
-        Logger.recordOutput("Shooting/HubActive", FieldConstants.isHubActive());
+        boolean isHubActive = FieldConstants.isHubActive();
+        Logger.recordOutput("Shooting/HubActive", isHubActive);
+        Logger.recordOutput("Shooting/TimeUntilHubStateChange", FieldConstants.getTimeUntilHubStateChange());
 
         if (gamePieceTrajectorySimulation == null) {
             return;

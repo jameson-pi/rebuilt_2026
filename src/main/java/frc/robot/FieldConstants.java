@@ -437,6 +437,82 @@ public class FieldConstants {
         }
     }
 
+    /**
+     * Get the time remaining in the current hub state (active or inactive). Returns 0 if the state will not change for
+     * the rest of the match.
+     */
+    public static double getTimeUntilHubStateChange() {
+        if (!DriverStation.isTeleopEnabled()) {
+            return 0.0;
+        }
+
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        if (alliance.isEmpty()) return 0.0;
+
+        String gameData = DriverStation.getGameSpecificMessage();
+        if (gameData.isEmpty()) return 0.0; // Assume stable active if no data
+
+        boolean redInactiveFirst = gameData.charAt(0) == 'R';
+        boolean shift1Active =
+                switch (alliance.get()) {
+                    case Red -> !redInactiveFirst;
+                    case Blue -> redInactiveFirst;
+                };
+
+        double matchTime = DriverStation.getMatchTime();
+
+        // Define boundaries in descending order
+        double tStart = 130.0;
+        double t1 = 105.0;
+        double t2 = 80.0;
+        double t3 = 55.0;
+        double t4 = 30.0;
+
+        if (matchTime > tStart) {
+            // Transition -> Shift 1
+            // If shift 1 is same state (Active), we look further.
+            // Transition is Active.
+            if (shift1Active) {
+                // Shift 1 is Active. Active -> Active.
+                // Shift 2 is Inactive. Change happens at t1.
+                return matchTime - t1;
+            } else {
+                // Shift 1 is Inactive. Active -> Inactive.
+                // Change happens at tStart.
+                return matchTime - tStart;
+            }
+        } else if (matchTime > t1) {
+            // In Shift 1. State is shift1Active.
+            // Next is Shift 2 (opposite).
+            // Change happens at t1.
+            return matchTime - t1;
+        } else if (matchTime > t2) {
+            // In Shift 2. State is !shift1Active.
+            // Next is Shift 3 (shift1Active).
+            // Change happens at t2.
+            return matchTime - t2;
+        } else if (matchTime > t3) {
+            // In Shift 3. State is shift1Active.
+            // Next is Shift 4 (opposite).
+            // Change happens at t3.
+            return matchTime - t3;
+        } else if (matchTime > t4) {
+            // In Shift 4. State is !shift1Active.
+            // Next is Endgame (Active).
+            if (!shift1Active) { // Shift 4 is Active (because shift1Active is false -> !false = true)
+                // Active -> Active (Endgame). No change.
+                return 0.0;
+            } else {
+                // Shift 4 is Inactive.
+                // Inactive -> Active. Change happens at t4.
+                return matchTime - t4;
+            }
+        } else {
+            // Endgame. Always Active. No change.
+            return 0.0;
+        }
+    }
+
     /** Get the hub position for the current alliance */
     public static Translation2d getHubPosition() {
         // Logic to determine alliance and return appropriate hub center
